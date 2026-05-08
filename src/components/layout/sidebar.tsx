@@ -32,7 +32,7 @@ export default function Sidebar({
   const [pageName, setPageName] = useState<string | null>(null)
 
   const navLinks: NavLink[] = [
-    { href: "/", icon: LayoutDashboard, label: "Dashboard",roles: ["ADMIN", "SUPERVISEUR"] },
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/policiers", icon: Users, label: "Policiers", auth: true, roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/controle", icon: ClipboardCheck, label: "Contrôles", auth: true, roles: ["ADMIN"] },
     { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR"] }
@@ -120,9 +120,20 @@ export default function Sidebar({
       <div>
 
         <div className="p-5 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
-            CMP
-          </h2>
+
+
+          {isOpen && (
+            <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
+              ABA-CM-PNC
+            </h2>
+          )}
+
+           {!isOpen && (
+            <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
+              CMP
+            </h2>
+          )}
+
 
           {isOpen && (
             <p className="text-sm opacity-70 mt-1 whitespace-nowrap">
@@ -130,8 +141,8 @@ export default function Sidebar({
             </p>
           )}
         </div>
-      
-       
+
+
 
         <ul className="menu p-3 gap-2 w-full">
           {renderLinks()}
@@ -139,9 +150,11 @@ export default function Sidebar({
 
       </div>
 
-      <div className="p-4 border-t border-base-300 text-center text-sm opacity-70 whitespace-nowrap">
-        ABA@2026
-      </div>
+      {isOpen && (
+        <div className="p-4 border-t border-base-300 text-center text-sm opacity-70 whitespace-nowrap">
+          ABA@2026
+        </div>
+      )}
     </aside>
   );
 }
