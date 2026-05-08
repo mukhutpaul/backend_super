@@ -45,7 +45,7 @@ export type UpdateUserPayload = Partial<{
   email: string;
   noms: string;
   password: string;
-  profileId: Number;
+  profileId: any;
 }>;
 
 /**

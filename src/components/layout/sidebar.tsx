@@ -35,7 +35,9 @@ export default function Sidebar({
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/policiers", icon: Users, label: "Policiers", auth: true, roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/controle", icon: ClipboardCheck, label: "Contrôles", auth: true, roles: ["ADMIN"] },
-    { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR","ADMIN"] }
+    { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
+    { href: "/unites", icon: Shield, label: "Unités", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
+    { href: "/missions", icon: Shield, label: "Missions", auth: true, roles: ["SUPERVISEUR", "ADMIN"] }
 
   ]
 
@@ -105,56 +107,48 @@ export default function Sidebar({
   return (
     <aside
       className={`
-        bg-base-200
-        min-h-screen
-        shadow-xl
-        flex
-        flex-col
-        justify-between
-        transition-all
-        duration-300
-        overflow-hidden
-        ${isOpen ? "w-72" : "w-0 lg:w-20"}
-      `}
+      fixed top-0 left-0
+      h-screen
+      bg-base-200
+      shadow-xl
+      flex flex-col
+      transition-all duration-300
+      overflow-hidden
+      ${isOpen ? "w-72" : "w-20"}
+    `}
     >
-      <div>
+      {/* TOP SECTION */}
+      <div className="flex flex-col flex-1">
 
+        {/* HEADER */}
         <div className="p-5 border-b border-base-300">
-
-
-          {isOpen && (
-            <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
-              ABA-CM-PNC
-            </h2>
-          )}
-
-           {!isOpen && (
+          {isOpen ? (
+            <>
+              <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
+                ABA-CM-PNC
+              </h2>
+              <p className="text-sm opacity-70 mt-1 whitespace-nowrap">
+                Controle des effectifs
+              </p>
+            </>
+          ) : (
             <h2 className="text-2xl font-bold text-primary whitespace-nowrap">
               CMP
             </h2>
           )}
-
-
-          {isOpen && (
-            <p className="text-sm opacity-70 mt-1 whitespace-nowrap">
-              Controle des effectifs
-            </p>
-          )}
         </div>
 
-
-
-        <ul className="menu p-3 gap-2 w-full">
+        {/* MENU (IMPORTANT flex-1 + overflow) */}
+        <ul className="menu p-3 gap-2 w-full flex-1 overflow-y-auto">
           {renderLinks()}
         </ul>
 
       </div>
 
-      {isOpen && (
-        <div className="p-4 border-t border-base-300 text-center text-sm opacity-70 whitespace-nowrap">
-          ABA@2026
-        </div>
-      )}
+      {/* FOOTER FIXÉ EN BAS */}
+      <div className="p-4 border-t border-base-300 text-center text-sm opacity-70 whitespace-nowrap">
+        ABA@2026
+      </div>
     </aside>
   );
 }

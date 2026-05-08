@@ -568,52 +568,32 @@ export default function UsersPage() {
                 </div>
 
                 {/* 📄 PAGINATION */}
+
+
                 <div className="flex justify-between items-center">
 
                     <p className="text-sm opacity-70">
-                        Page {page} / {totalPages || 1} Total : {filtered.length} utilisateur(s)
+                        Page {page} / {totalPages || 1} — Total : {filtered.length} utilisateur(s)
                     </p>
 
                     <div className="join">
 
+                        {/* PREVIOUS */}
                         <button
                             className="join-item btn btn-sm"
                             disabled={page === 1}
-                            onClick={() =>
-                                setPage((p) => p - 1)
-                            }
+                            onClick={() => setPage((p) => p - 1)}
                         >
-                            «
+                            « Précédent
                         </button>
 
-                        {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1
-                        ).map((p) => (
-
-                            <button
-                                key={p}
-                                className={`join-item btn btn-sm ${page === p
-                                    ? "btn-active"
-                                    : ""
-                                    }`}
-                                onClick={() => setPage(p)}
-                            >
-                                {p}
-                            </button>
-
-                        ))}
-
+                        {/* NEXT */}
                         <button
                             className="join-item btn btn-sm"
-                            disabled={
-                                page === totalPages
-                            }
-                            onClick={() =>
-                                setPage((p) => p + 1)
-                            }
+                            disabled={page === totalPages || totalPages === 0}
+                            onClick={() => setPage((p) => p + 1)}
                         >
-                            »
+                            Suivant »
                         </button>
 
                     </div>

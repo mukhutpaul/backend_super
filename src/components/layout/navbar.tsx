@@ -1,7 +1,6 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { logout } from "@/services/auth.service";
 
 const themes = [
     "light",
@@ -19,25 +18,37 @@ const themes = [
 
 export default function Navbar({
     toggleSidebar,
+    isOpen,
 }: {
     toggleSidebar: () => void;
+    isOpen: boolean;
 }) {
-    const changeTheme = (theme: string) => {
-        document.documentElement.setAttribute(
-            "data-theme",
-            theme
-        );
 
+    const changeTheme = (theme: string) => {
+        document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("theme", theme);
     };
 
-    const logout = () => {
+    const handleLogout = () => {
         localStorage.removeItem("token");
         window.location.href = "/login";
     };
 
     return (
-        <div className="navbar bg-base-100 border-b border-base-300 px-4 shadow-sm">
+        <div
+            className="
+                fixed top-0 right-0
+                h-16 z-50
+                bg-base-100
+                border-b border-base-300
+                shadow-sm
+                flex items-center px-4
+                transition-all duration-300
+            "
+            style={{
+                left: isOpen ? "18rem" : "5rem",
+            }}
+        >
 
             {/* LEFT */}
             <div className="flex items-center gap-3 flex-1">
@@ -50,7 +61,7 @@ export default function Navbar({
                 </button>
 
                 <div>
-                    <h1 className="text-2xl font-bold text-primary">
+                    <h1 className="text-xl font-bold text-primary">
                         ABA Controle Manager PNC
                     </h1>
 
@@ -64,7 +75,6 @@ export default function Navbar({
             {/* RIGHT */}
             <div className="flex items-center gap-4">
 
-                {/* THEME SELECT */}
                 <select
                     className="select select-bordered select-sm w-44"
                     defaultValue={
@@ -72,9 +82,7 @@ export default function Navbar({
                             ? localStorage.getItem("theme") || "light"
                             : "light"
                     }
-                    onChange={(e) =>
-                        changeTheme(e.target.value)
-                    }
+                    onChange={(e) => changeTheme(e.target.value)}
                 >
                     {themes.map((theme) => (
                         <option key={theme} value={theme}>
@@ -83,68 +91,50 @@ export default function Navbar({
                     ))}
                 </select>
 
-                {/* USER DROPDOWN */}
                 <div className="dropdown dropdown-end">
 
-                    {/* Avatar */}
-                    <div
-                        tabIndex={0}
-                        role="button"
-                        className="btn btn-ghost btn-circle avatar"
-                    >
+                    <div tabIndex={0} role="button"
+                        className="btn btn-ghost btn-circle avatar">
+
                         <div className="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">
                             A
                         </div>
+
                     </div>
 
-                    {/* Menu */}
-                    <ul
-                        tabIndex={0}
-                        className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-                    >
+                    <ul tabIndex={0}
+                        className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
 
                         <li>
-                            <a>
-                                👤 {(() => {
-                                    const username = (localStorage.getItem("username") || "")
-                                        .toLowerCase();
-
-                                    return username.charAt(0).toUpperCase() + username.slice(1);
-                                })()}
-                            </a>
+                            <span>
+                                👤 {typeof window !== "undefined"
+                                    ? localStorage.getItem("username") || "User"
+                                    : "User"}
+                            </span>
                         </li>
 
                         <li>
-                            <a>
-                                {(() => {
-                                    const profile = (localStorage.getItem("profile") || "")
-                                        .replace(/"/g, "")
-                                        .toLowerCase();
-
-                                    return profile.charAt(0).toUpperCase() + profile.slice(1);
-                                })()}
-                            </a>
+                            <span>
+                                {typeof window !== "undefined"
+                                    ? localStorage.getItem("profile") || "Profile"
+                                    : "Profile"}
+                            </span>
                         </li>
-
-                        {/* <li>
-                            <a>🔔 Notifications</a>
-                        </li> */}
 
                         <div className="divider my-1"></div>
 
                         <li>
-                            <button
-                                onClick={logout}
-                                className="text-error"
-                            >
+                            <button onClick={handleLogout} className="text-error">
                                 🚪 Déconnexion
                             </button>
                         </li>
 
                     </ul>
+
                 </div>
 
             </div>
+
         </div>
     );
 }
