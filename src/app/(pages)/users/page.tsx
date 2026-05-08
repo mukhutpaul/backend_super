@@ -61,9 +61,19 @@ const createUserSchema = z.object({
         .string()
         .min(1, "Sélectionnez un profil"),
 });
+type CreateUserForm = z.infer<typeof createUserSchema>;
 
-type CreateUserForm =
-    z.infer<typeof createUserSchema>;
+/**
+ * UPDATE
+ */
+const updateUserSchema = z.object({
+    username: z.string().min(3),
+    noms: z.string().min(3),
+    email: z.string().email(),
+    profileId: z.string().optional(),
+});
+
+type UpdateUserForm = z.infer<typeof updateUserSchema>;
 
 export default function UsersPage() {
 
@@ -78,9 +88,11 @@ export default function UsersPage() {
     /**
      * 🔥 MODAL
      */
-    const [openModal, setOpenModal] =
-        useState(false);
+    const [openModal, setOpenModal] = useState(false);
 
+    /**
+       * CREATE FORM
+       */
     const {
         register,
         handleSubmit,
@@ -89,46 +101,48 @@ export default function UsersPage() {
         reset,
         formState: { errors },
     } = useForm<CreateUserForm>({
-        resolver: zodResolver(
-            createUserSchema
-        ),
+        resolver: zodResolver(createUserSchema),
     });
+
+
+    /**
+     * UPDATE FORM (IMPORTANT FIX)
+     */
+    const {
+        register: registerEdit,
+        handleSubmit: handleSubmitEdit,
+        setValue: setValueEdit,
+        reset: resetEdit,
+        formState: { errors: errorsEdit },
+    } = useForm<UpdateUserForm>({
+        resolver: zodResolver(updateUserSchema),
+    });
+
+
 
     const openEditModal = (user: User) => {
         setEditingUserId(user.id);
+        setEditModal(true);
 
-        reset({
+        resetEdit({
             username: user.username,
             noms: user.noms,
             email: user.email,
-            password: "",
             profileId: user.profile?.id ? String(user.profile.id) : "",
         });
-
-        setEditModal(true);
-
-        setTimeout(() => {
-            setValue("username", user.username);
-            setValue("noms", user.noms);
-            setValue("email", user.email);
-            setValue("profileId", user.profile?.id ? String(user.profile.id) : "");
-        }, 0);
     };
 
-
-    const handleUpdateUser = async (data: CreateUserForm) => {
-        toast.error("Bonjour")
+    const handleUpdateUser = async (data: UpdateUserForm) => {
         if (editingUserId === null) return;
-
 
         try {
             await updateUser(editingUserId, {
                 username: data.username,
                 email: data.email,
                 noms: data.noms,
-
-                // ⚠️ backend attend souvent profileId (PAS object)
-                profileId: data.profileId ? Number(data.profileId) : null,
+                profile: data.profileId
+                    ? { id: Number(data.profileId) }
+                    : null,
             });
 
             toast.success("Utilisateur modifié");
@@ -136,23 +150,16 @@ export default function UsersPage() {
             setEditModal(false);
             setEditingUserId(null);
 
-            reset({
-                username: "",
-                email: "",
-                noms: "",
-                password: "",
-                profileId: "",
-            });
+            resetEdit();
 
             fetchUsers();
-
         } catch (error: any) {
             console.error(error);
-            toast.error(
-                error.response?.data?.message || "Erreur modification"
-            );
+            toast.error(error.response?.data?.message || "Erreur modification");
         }
     };
+
+
 
     /**
      * ➕ FORM
@@ -866,7 +873,7 @@ export default function UsersPage() {
 
                         {/* FORM */}
                         <form
-                            onSubmit={handleSubmit(handleUpdateUser)}
+                            onSubmit={handleSubmitEdit(handleUpdateUser)}
                             className="p-5 space-y-4"
                         >
 
@@ -875,11 +882,11 @@ export default function UsersPage() {
                                 <input
                                     className="input input-bordered w-full"
                                     placeholder="Username"
-                                    {...register("username")}
+                                    {...registerEdit("username")}
                                 />
-                                {errors.username && (
+                                {errorsEdit.username && (
                                     <p className="text-error text-sm">
-                                        {errors.username.message}
+                                        {errorsEdit.username.message}
                                     </p>
                                 )}
                             </div>
@@ -889,11 +896,11 @@ export default function UsersPage() {
                                 <input
                                     className="input input-bordered w-full"
                                     placeholder="Noms"
-                                    {...register("noms")}
+                                    {...registerEdit("noms")}
                                 />
-                                {errors.noms && (
+                                {errorsEdit.noms && (
                                     <p className="text-error text-sm">
-                                        {errors.noms.message}
+                                        {errorsEdit.noms.message}
                                     </p>
                                 )}
                             </div>
@@ -903,11 +910,11 @@ export default function UsersPage() {
                                 <input
                                     className="input input-bordered w-full"
                                     placeholder="Email"
-                                    {...register("email")}
+                                    {...registerEdit("email")}
                                 />
-                                {errors.email && (
+                                {errorsEdit.email && (
                                     <p className="text-error text-sm">
-                                        {errors.email.message}
+                                        {errorsEdit.email.message}
                                     </p>
                                 )}
                             </div>
@@ -916,7 +923,7 @@ export default function UsersPage() {
                             <div>
                                 <select
                                     className="select select-bordered w-full"
-                                    {...register("profileId")}
+                                    {...registerEdit("profileId")}
                                     onChange={(e) =>
                                         setValue("profileId", e.target.value)
                                     }
@@ -929,9 +936,9 @@ export default function UsersPage() {
                                     ))}
                                 </select>
 
-                                {errors.profileId && (
+                                {errorsEdit.profileId && (
                                     <p className="text-error text-sm">
-                                        {errors.profileId.message}
+                                        {errorsEdit.profileId.message}
                                     </p>
                                 )}
                             </div>
@@ -961,6 +968,8 @@ export default function UsersPage() {
 
                     </div>
                 </div>
+
+
             )}
 
         </DashboardLayout>
