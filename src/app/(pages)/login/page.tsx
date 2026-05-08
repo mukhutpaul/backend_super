@@ -30,65 +30,49 @@ export default function LoginPage() {
      * LOGIN
      */
     const onSubmit = async (data: LoginForm) => {
-
         try {
-
-            // ✅ start loading
             setLoading(true);
 
             toast.info(
-                `Connexion ${mode === "local"
-                    ? "locale"
-                    : "distante"} en cours...`
+                `Connexion ${mode === "local" ? "locale" : "distante"} en cours...`
             );
 
-            // ✅ sauvegarder mode
             localStorage.setItem("mode", mode);
 
-            // ✅ requête API
+            // 🔌 API CALL
             const response = await loginRequest(data);
 
-            // ✅ sauvegarder token
-            localStorage.setItem(
-                "token",
-                response.token
-            );
+            // 💾 TOKEN
+            localStorage.setItem("token", response.token);
 
-            // ✅ username
-            localStorage.setItem(
-                "username",
-                response.username
-            );
+            // 💾 USERNAME
+            localStorage.setItem("username", response.username);
 
-            // ✅ profile
-            localStorage.setItem(
-                "profile",
-                response.profile
-            );
+            // 💾 PROFILE (SAFE)
+            localStorage.setItem("profile",String(response.profile ?? null))
+            ;
 
-            // ✅ user complet
+            // 💾 USER COMPLET (SAFE)
             localStorage.setItem(
                 "user",
-                JSON.stringify(response)
+                JSON.stringify({
+                    ...response,
+                    profile: response.profile ?? null,
+                })
             );
 
             toast.success("Connexion réussie");
 
-            // ✅ redirect dashboard
             window.location.href = "/dashboard";
 
         } catch (error: any) {
-
             console.error(error);
 
             toast.error(
-                error.response?.data?.message ||
-                "Identifiants invalides"
+                error.response?.data?.message || "Identifiants invalides"
             );
 
         } finally {
-
-            // ✅ stop loading
             setLoading(false);
         }
     };
@@ -121,11 +105,10 @@ export default function LoginPage() {
                             type="button"
                             disabled={loading}
                             onClick={() => setMode("local")}
-                            className={`btn btn-sm flex-1 ${
-                                mode === "local"
+                            className={`btn btn-sm flex-1 ${mode === "local"
                                     ? "btn-primary"
                                     : "btn-outline"
-                            }`}
+                                }`}
                         >
                             <Server size={16} />
                             Local
@@ -136,11 +119,10 @@ export default function LoginPage() {
                             type="button"
                             disabled={loading}
                             onClick={() => setMode("remote")}
-                            className={`btn btn-sm flex-1 ${
-                                mode === "remote"
+                            className={`btn btn-sm flex-1 ${mode === "remote"
                                     ? "btn-primary"
                                     : "btn-outline"
-                            }`}
+                                }`}
                         >
                             <Wifi size={16} />
                             Distant

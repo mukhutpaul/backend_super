@@ -51,7 +51,7 @@ export default function Navbar({
 
                 <div>
                     <h1 className="text-2xl font-bold text-primary">
-                        ABA Controle Manager PNC 
+                        ABA Controle Manager PNC
                     </h1>
 
                     <p className="text-xs opacity-70">
@@ -104,16 +104,31 @@ export default function Navbar({
                     >
 
                         <li>
-                            <a>👤 Mon profil</a>
+                            <a>
+                                👤 {(() => {
+                                    const username = (localStorage.getItem("username") || "")
+                                        .toLowerCase();
+
+                                    return username.charAt(0).toUpperCase() + username.slice(1);
+                                })()}
+                            </a>
                         </li>
 
                         <li>
-                            <a>⚙️ Paramètres</a>
+                            <a>
+                                {(() => {
+                                    const profile = (localStorage.getItem("profile") || "")
+                                        .replace(/"/g, "")
+                                        .toLowerCase();
+
+                                    return profile.charAt(0).toUpperCase() + profile.slice(1);
+                                })()}
+                            </a>
                         </li>
 
-                        <li>
+                        {/* <li>
                             <a>🔔 Notifications</a>
-                        </li>
+                        </li> */}
 
                         <div className="divider my-1"></div>
 
