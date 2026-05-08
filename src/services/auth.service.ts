@@ -30,6 +30,16 @@ export type User = {
   };
 };
 
+export type CreateUserPayload = {
+  username: string;
+  password: string;
+  email: string;
+  noms: string;
+  profile?: {
+    id: number;
+  };
+};
+
 export type UpdateUserPayload = Partial<{
   username: string;
   email: string;
@@ -48,6 +58,24 @@ export const loginRequest = async (
   data: LoginPayload
 ): Promise<LoginResponse> => {
   const res = await api.post("/auth/login", data);
+  return res.data;
+};
+
+/**
+ * =========================
+ * CREATE USER
+ * =========================
+ */
+
+export const createUser = async (
+  data: CreateUserPayload
+): Promise<User> => {
+
+  const res = await api.post(
+    "/auth/register",
+    data
+  );
+
   return res.data;
 };
 
