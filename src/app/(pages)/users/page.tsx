@@ -41,6 +41,14 @@ type User = {
     profile?: Profile;
 };
 
+type UpdateUserPayload = {
+    username?: string;
+    email?: string;
+    noms?: string;
+    password?: string;
+    profileId?: number;
+};
+
 const createUserSchema = z.object({
     username: z
         .string()
@@ -70,7 +78,7 @@ const updateUserSchema = z.object({
     username: z.string().min(3),
     noms: z.string().min(3),
     email: z.string().email(),
-    profileId: z.string().optional(),
+    profileId: z.string().optional().or(z.literal("")),
 });
 
 type UpdateUserForm = z.infer<typeof updateUserSchema>;
@@ -84,6 +92,7 @@ export default function UsersPage() {
     const [profileSearch, setProfileSearch] = useState("");
     const [editModal, setEditModal] = useState(false);
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [profileOpen, setProfileOpen] = useState(false);
 
     /**
      * 🔥 MODAL
@@ -140,11 +149,8 @@ export default function UsersPage() {
                 username: data.username,
                 email: data.email,
                 noms: data.noms,
-                profile: data.profileId
-                    ? { id: Number(data.profileId) }
-                    : null,
+                profileId: Number(data.profileId), // ✅ CORRECT
             });
-
             toast.success("Utilisateur modifié");
 
             setEditModal(false);
@@ -741,6 +747,7 @@ export default function UsersPage() {
                                     tabIndex={0}
                                     role="button"
                                     className="btn btn-outline w-full justify-between"
+                                    onClick={() => setProfileOpen(!profileOpen)}
                                 >
 
                                     {watch("profileId")
@@ -793,17 +800,18 @@ export default function UsersPage() {
                                                     key={p.id}
                                                     className="btn btn-ghost justify-start w-full"
                                                     onClick={() => {
-                                                        setValue(
-                                                            "profileId",
-                                                            String(p.id)
-                                                        );
+                                                        setValue("profileId", String(p.id), {
+                                                            shouldValidate: true,
+                                                            shouldDirty: true,
+                                                        });
+
+                                                        setProfileOpen(false); // ferme la liste
                                                     }}
                                                 >
                                                     {p.name}
                                                 </button>
 
                                             ))}
-
                                         </div>
 
                                     </div>
@@ -864,7 +872,7 @@ export default function UsersPage() {
                                 onClick={() => {
                                     setEditModal(false);
                                     setEditingUserId(null);
-                                    reset();
+                                    resetEdit(); // ✅ FIX ICI
                                 }}
                             >
                                 <X />
@@ -924,21 +932,22 @@ export default function UsersPage() {
                                 <select
                                     className="select select-bordered w-full"
                                     {...registerEdit("profileId")}
-                                    onChange={(e) =>
-                                        setValue("profileId", e.target.value)
-                                    }
                                 >
                                     <option value="">Profil</option>
+
                                     {profiles.map((p) => (
-                                        <option key={p.id} value={p.id}>
+                                        <option
+                                            key={p.id}
+                                            value={Number(p.id)}
+                                        >
                                             {p.name}
                                         </option>
                                     ))}
                                 </select>
 
-                                {errorsEdit.profileId && (
+                                {errorsEdit.profileId?.message && (
                                     <p className="text-error text-sm">
-                                        {errorsEdit.profileId.message}
+                                        {String(errorsEdit.profileId.message)}
                                     </p>
                                 )}
                             </div>
@@ -952,7 +961,7 @@ export default function UsersPage() {
                                     onClick={() => {
                                         setEditModal(false);
                                         setEditingUserId(null);
-                                        reset();
+                                        resetEdit(); // ✅ FIX ICI
                                     }}
                                 >
                                     Annuler
@@ -968,8 +977,6 @@ export default function UsersPage() {
 
                     </div>
                 </div>
-
-
             )}
 
         </DashboardLayout>
