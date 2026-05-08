@@ -44,6 +44,34 @@ export default function MissionsPage() {
         chargeMissionId: 0,
     });
 
+    const [page, setPage] = useState(1);
+    const limit = 20;
+
+    const filteredMissions = missions.filter((m) => {
+
+        const matchSearch =
+            filters.search === "" ||
+            m.zone.toLowerCase().includes(filters.search.toLowerCase()) ||
+            m.numero.toLowerCase().includes(filters.search.toLowerCase());
+
+        const matchStatus =
+            filters.status === "" ||
+            (filters.status === "ACTIVE" && m.isActive) ||
+            (filters.status === "INACTIVE" && !m.isActive);
+
+        return matchSearch && matchStatus;
+    });
+
+    const totalPages = Math.ceil(filteredMissions.length / limit);
+
+    const paginatedMissions = filteredMissions.slice(
+        (page - 1) * limit,
+        page * limit
+    );
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
+
     const fetchMissions = async () => {
         try {
             setLoading(true);
@@ -224,197 +252,212 @@ export default function MissionsPage() {
                 </div>
 
                 {/* TABLE */}
+                *{/* TABLE + PAGINATION */}
                 <div className="card bg-base-100 shadow-md">
 
                     <div className="card-body p-0">
 
-                        <table className="table">
+                        <div className="overflow-x-auto">
 
-                            <thead className="bg-base-200">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Zone</th>
-                                    <th>Numéro</th>
-                                    <th>Statut</th>
-                                    <th>Debut</th>
-                                    <th>Fin</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
+                            <table className="table w-full">
 
-                            <tbody>
-
-                                {/* ⏳ LOADING */}
-                                {loading && (
+                                <thead className="bg-base-200">
                                     <tr>
-                                        <td colSpan={7} className="text-center py-10">
-                                            <span className="loading loading-spinner loading-md"></span>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Zone</th>
+                                        <th>Numéro</th>
+                                        <th>Statut</th>
+                                        <th>Debut</th>
+                                        <th>Fin</th>
+                                        <th>Actions</th>
                                     </tr>
-                                )}
+                                </thead>
 
-                                {/* 📭 EMPTY STATE */}
-                                {!loading && missions.length === 0 && (
-                                    <tr>
-                                        <td colSpan={7} className="text-center py-12">
+                                <tbody>
 
-                                            <div className="flex flex-col items-center gap-2 opacity-70">
+                                    {loading && (
+                                        <tr>
+                                            <td colSpan={7} className="text-center py-10">
+                                                <span className="loading loading-spinner loading-md"></span>
+                                            </td>
+                                        </tr>
+                                    )}
 
-                                                <Inbox className="w-8 h-8" />
+                                    {!loading && filteredMissions.length === 0 && (
+                                        <tr>
+                                            <td colSpan={7} className="text-center py-12">
+                                                <div className="flex flex-col items-center gap-2 opacity-70">
+                                                    <Inbox className="w-8 h-8" />
+                                                    <p className="font-semibold">Aucune mission trouvée</p>
+                                                    <p className="text-sm">Créez une nouvelle mission pour commencer</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
 
-                                                <p className="font-semibold">
-                                                    Aucune mission trouvée
-                                                </p>
+                                    {!loading && paginatedMissions.map((m) => (
+                                        <tr key={m.id} className="hover">
+                                            <td>{m.id}</td>
+                                            <td>{m.zone}</td>
+                                            <td>{m.numero}</td>
 
-                                                <p className="text-sm">
-                                                    Créez une nouvelle mission pour commencer
-                                                </p>
+                                            <td>
+                                                {m.isActive ? (
+                                                    <span className="badge badge-success">Active</span>
+                                                ) : (
+                                                    <span className="badge badge-warning">En attente</span>
+                                                )}
+                                            </td>
 
-                                            </div>
+                                            <td>{m.dateDebut || "-"}</td>
+                                            <td>{m.dateFin || "-"}</td>
 
-                                        </td>
-                                    </tr>
-                                )}
+                                            <td className="flex gap-2">
+                                                {!m.isActive && (
+                                                    <button
+                                                        className="btn btn-xs btn-success"
+                                                        onClick={() => handleStart(m.id)}
+                                                    >
+                                                        Activer
+                                                    </button>
+                                                )}
 
-                                {/* 📄 DATA */}
-                                {!loading && missions.map((m) => (
-                                    <tr key={m.id} className="hover">
+                                                {m.isActive && (
+                                                    <button
+                                                        className="btn btn-xs btn-warning"
+                                                        onClick={() => handleClose(m.id)}
+                                                    >
+                                                        Clôturer
+                                                    </button>
+                                                )}
 
-                                        <td>{m.id}</td>
-                                        <td>{m.zone}</td>
-                                        <td>{m.numero}</td>
-
-                                        <td>
-                                            {m.isActive ? (
-                                                <span className="badge badge-success">Active</span>
-                                            ) : (
-                                                <span className="badge badge-warning">En attente</span>
-                                            )}
-                                        </td>
-
-                                        <td>{m.dateDebut || "-"}</td>
-                                        <td>{m.dateFin || "-"}</td>
-
-                                        <td className="flex gap-2">
-
-                                            {!m.isActive && (
                                                 <button
-                                                    className="btn btn-xs btn-success"
-                                                    onClick={() => handleStart(m.id)}
+                                                    className="btn btn-xs btn-error"
+                                                    onClick={() => handleDelete(m.id)}
                                                 >
-                                                    Activer
+                                                    <Trash2 size={14} />
                                                 </button>
-                                            )}
+                                            </td>
+                                        </tr>
+                                    ))}
 
-                                            {m.isActive && (
-                                                <button
-                                                    className="btn btn-xs btn-warning"
-                                                    onClick={() => handleClose(m.id)}
-                                                >
-                                                    Clôturer
-                                                </button>
-                                            )}
+                                </tbody>
 
-                                            <button
-                                                className="btn btn-xs btn-error"
-                                                onClick={() => handleDelete(m.id)}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                            </table>
 
-                                        </td>
+                        </div>
 
-                                    </tr>
-                                ))}
+                        {/* ✅ PAGINATION ALIGNÉE */}
+                        <div className="flex justify-between items-center px-4 py-3 border-t border-base-300">
 
-                            </tbody>
+                            <p className="text-sm opacity-70">
+                                Page {page} / {totalPages || 1} — Total : {filteredMissions.length}
+                            </p>
 
-                        </table>
+                            <div className="join">
 
-                    </div>
+                                <button
+                                    className="join-item btn btn-sm"
+                                    disabled={page === 1}
+                                    onClick={() => setPage((p) => p - 1)}
+                                >
+                                    « Précédent
+                                </button>
 
-                </div>
+                                <button
+                                    className="join-item btn btn-sm"
+                                    disabled={page === totalPages || totalPages === 0}
+                                    onClick={() => setPage((p) => p + 1)}
+                                >
+                                    Suivant »
+                                </button>
 
-            </div>
-
-            {/* CREATE MODAL */}
-            {openModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
-                    <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
-
-                        <h2 className="text-xl font-bold mb-4">
-                            Nouvelle mission
-                        </h2>
-
-                        <input
-                            className="input input-bordered w-full mb-2"
-                            placeholder="Zone"
-                            value={form.zone}
-                            onChange={(e) => {
-                                const zone = e.target.value;
-
-                                setForm((prev) => ({
-                                    ...prev,
-                                    zone,
-                                    numero: generateMissionNumber(zone), // auto update
-                                }));
-                            }}
-                        />
-
-                        <input
-                            className="input input-bordered w-full mb-2"
-                            placeholder="Numéro mission"
-                            value={form.numero}
-                            readOnly
-                        />
-
-
-                        <select
-                            className="select select-bordered w-full mb-4"
-                            onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    chargeMissionId: Number(e.target.value),
-                                })
-                            }
-                            value={form.chargeMissionId || ""}
-                        >
-
-                            <option value="">
-                                Sélectionner chef mission (SUPERVISEUR)
-                            </option>
-
-                            {superviseurs.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                    {u.noms || u.username}
-                                </option>
-                            ))}
-
-                        </select>
-
-                        <div className="flex justify-end gap-2">
-
-                            <button
-                                className="btn"
-                                onClick={() => setOpenModal(false)}
-                            >
-                                Annuler
-                            </button>
-
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleCreate}
-                            >
-                                Créer
-                            </button>
+                            </div>
 
                         </div>
 
                     </div>
-
                 </div>
-            )}
+                 </div>
+
+                {/* CREATE MODAL */}
+                {openModal && (
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+                        <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
+
+                            <h2 className="text-xl font-bold mb-4">
+                                Nouvelle mission
+                            </h2>
+
+                            <input
+                                className="input input-bordered w-full mb-2"
+                                placeholder="Zone"
+                                value={form.zone}
+                                onChange={(e) => {
+                                    const zone = e.target.value;
+
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        zone,
+                                        numero: generateMissionNumber(zone), // auto update
+                                    }));
+                                }}
+                            />
+
+                            <input
+                                className="input input-bordered w-full mb-2"
+                                placeholder="Numéro mission"
+                                value={form.numero}
+                                readOnly
+                            />
+
+
+                            <select
+                                className="select select-bordered w-full mb-4"
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        chargeMissionId: Number(e.target.value),
+                                    })
+                                }
+                                value={form.chargeMissionId || ""}
+                            >
+
+                                <option value="">
+                                    Sélectionner chef mission (SUPERVISEUR)
+                                </option>
+
+                                {superviseurs.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                        {u.noms || u.username}
+                                    </option>
+                                ))}
+
+                            </select>
+
+                            <div className="flex justify-end gap-2">
+
+                                <button
+                                    className="btn"
+                                    onClick={() => setOpenModal(false)}
+                                >
+                                    Annuler
+                                </button>
+
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleCreate}
+                                >
+                                    Créer
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )}
 
         </DashboardLayout>
     );

@@ -1,7 +1,8 @@
-import axios from "axios";
+import { api } from "@/lib/axios"
 
-const API = process.env.NEXT_PUBLIC_API_URL + "/api/missions";
-
+/**
+ * TYPES
+ */
 export type Mission = {
     id: number;
     dateDebut: string | null;
@@ -32,27 +33,19 @@ export type UpdateMissionPayload = {
  * GET ALL
  */
 export const getMissions = async (): Promise<Mission[]> => {
-    const res = await axios.get(API, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-    });
+    const res = await api.get("/missions");
     return res.data;
 };
 
 /**
- * CREATE (mission pas encore active)
+ * CREATE
  */
 export const createMission = async (data: CreateMissionPayload) => {
-    const res = await axios.post(API, {
+    const res = await api.post("/missions", {
         ...data,
         isActive: false,
         dateDebut: null,
         dateFin: null,
-    }, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
     });
 
     return res.data;
@@ -62,38 +55,23 @@ export const createMission = async (data: CreateMissionPayload) => {
  * UPDATE
  */
 export const updateMission = async (id: number, data: UpdateMissionPayload) => {
-    const res = await axios.put(`${API}/${id}`, data, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-    });
-
+    const res = await api.put(`/missions/${id}`, data);
     return res.data;
 };
 
 /**
- * ❗ ACTIVER mission (START)
+ * START
  */
 export const startMission = async (id: number) => {
-    const res = await axios.put(`${API}/${id}/start`, {}, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-    });
-
+    const res = await api.put(`/missions/${id}/start`);
     return res.data;
 };
 
 /**
- * ❗ CLÔTURER mission (END)
+ * CLOSE
  */
 export const closeMission = async (id: number) => {
-    const res = await axios.put(`${API}/${id}/close`, {}, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-    });
-
+    const res = await api.put(`/missions/${id}/close`);
     return res.data;
 };
 
@@ -101,11 +79,6 @@ export const closeMission = async (id: number) => {
  * DELETE
  */
 export const deleteMission = async (id: number) => {
-    const res = await axios.delete(`${API}/${id}`, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-    });
-
+    const res = await api.delete(`/missions/${id}`);
     return res.data;
 };
