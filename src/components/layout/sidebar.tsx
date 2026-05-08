@@ -35,7 +35,7 @@ export default function Sidebar({
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/policiers", icon: Users, label: "Policiers", auth: true, roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/controle", icon: ClipboardCheck, label: "Contrôles", auth: true, roles: ["ADMIN"] },
-    { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR"] }
+    { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR","ADMIN"] }
 
   ]
 

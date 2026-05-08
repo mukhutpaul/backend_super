@@ -1,35 +1,113 @@
 import { api } from "@/lib/axios";
 
-type LoginPayload = {
+/**
+ * =========================
+ * TYPES
+ * =========================
+ */
+
+export type LoginPayload = {
   username: string;
   password: string;
 };
 
-export const loginRequest = async (
-  data: LoginPayload
-) => {
-
-  const response = await api.post(
-    "/auth/login",
-    data
-  );
-
-  return response.data;
+export type LoginResponse = {
+  token: string;
+  username: string;
+  email?: string;
+  noms?: string;
+  profile?: string;
 };
 
-export const logout = () => {
+export type User = {
+  id: number;
+  username: string;
+  email: string;
+  noms: string;
+  profile?: {
+    id: number;
+    name: string;
+  };
+};
 
-  // supprimer token
+export type UpdateUserPayload = Partial<{
+  username: string;
+  email: string;
+  noms: string;
+  password: string;
+  profile: any;
+}>;
+
+/**
+ * =========================
+ * AUTH METHODS
+ * =========================
+ */
+
+export const loginRequest = async (
+  data: LoginPayload
+): Promise<LoginResponse> => {
+  const res = await api.post("/auth/login", data);
+  return res.data;
+};
+
+export const logout = (): void => {
   localStorage.removeItem("token");
-
-  // supprimer user
   localStorage.removeItem("user");
   localStorage.removeItem("username");
   localStorage.removeItem("profile");
-
-  // supprimer mode
   localStorage.removeItem("mode");
 
-  // redirect login
   window.location.href = "/login";
+};
+
+export const saveSession = (data: LoginResponse): void => {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("username", data.username);
+  localStorage.setItem("profile", data.profile || "");
+  localStorage.setItem("user", JSON.stringify(data));
+};
+
+export const getToken = (): string | null => {
+  return localStorage.getItem("token");
+};
+
+export const getCurrentUser = (): LoginResponse | null => {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
+};
+
+export const isAuthenticated = (): boolean => {
+  return !!getToken();
+};
+
+/**
+ * =========================
+ * USERS METHODS
+ * =========================
+ */
+
+export const getUsers = async (): Promise<User[]> => {
+  const res = await api.get("/auth/users");
+  return res.data;
+};
+
+export const getUserById = async (
+  id: number
+): Promise<User> => {
+  const res = await api.get(`/auth/users/${id}`);
+  return res.data;
+};
+
+export const updateUser = async (
+  id: number,
+  data: UpdateUserPayload
+) => {
+  const res = await api.patch(`/auth/users/${id}`, data);
+  return res.data;
+};
+
+export const deleteUser = async (id: number) => {
+  const res = await api.delete(`/auth/users/${id}`);
+  return res.data;
 };

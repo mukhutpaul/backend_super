@@ -51,7 +51,7 @@ export default function Navbar({
 
                 <div>
                     <h1 className="text-2xl font-bold text-primary">
-                        PNC Controle Manager
+                        ABA Controle Manager PNC 
                     </h1>
 
                     <p className="text-xs opacity-70">
