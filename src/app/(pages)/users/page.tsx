@@ -14,6 +14,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Search } from "lucide-react";
+import Select from "react-select";
+
 
 import Swal from "sweetalert2";
 import { updateUser, deleteUser } from "@/services/auth.service";
@@ -82,6 +84,42 @@ const updateUserSchema = z.object({
 });
 
 type UpdateUserForm = z.infer<typeof updateUserSchema>;
+
+export const selectStyles = {
+    control: () =>
+        "input input-bordered w-full min-h-[48px] flex flex-wrap px-2",
+
+    valueContainer: () =>
+        "flex gap-1 items-center",
+
+    input: () =>
+        "text-sm text-base-content",
+
+    placeholder: () =>
+        "text-base-content/50 text-sm",
+
+    menu: () =>
+        "bg-base-100 border border-base-300 rounded-box shadow-lg mt-2 z-50 overflow-hidden",
+
+    menuList: () =>
+        "max-h-60 overflow-y-auto",
+
+    option: ({ isFocused, isSelected }: any) =>
+        `
+        px-4 py-2 cursor-pointer text-sm
+        ${isFocused ? "bg-base-200" : ""}
+        ${isSelected ? "bg-primary text-primary-content" : ""}
+    `,
+
+    singleValue: () =>
+        "text-sm text-base-content",
+
+    dropdownIndicator: () =>
+        "px-2 text-base-content/70",
+
+    indicatorSeparator: () =>
+        "hidden",
+};
 
 export default function UsersPage() {
 
@@ -423,34 +461,33 @@ export default function UsersPage() {
                                     })
                                 }
                             />
+                            <Select
+                                options={profiles.map((p: any) => ({
+                                    value: p.name,
+                                    label: p.name,
+                                }))}
 
-                            <select
-                                className="select select-bordered w-full"
-                                onChange={(e) =>
+                                value={
+                                    profiles
+                                        .map((p: any) => ({
+                                            value: p.name,
+                                            label: p.name,
+                                        }))
+                                        .find((opt: any) => opt.value === filters.profile) || null
+                                }
+
+                                onChange={(selected: any) =>
                                     setFilters({
                                         ...filters,
-                                        profile: e.target.value,
+                                        profile: selected?.value || "",
                                     })
                                 }
-                            >
 
-                                <option value="">
-                                    Tous profils
-                                </option>
-
-                                {profiles.map((profile) => (
-
-                                    <option
-                                        key={profile.id}
-                                        value={profile.name}
-                                    >
-                                        {profile.name}
-                                    </option>
-
-                                ))}
-
-                            </select>
-
+                                placeholder="Tous les profils"
+                                unstyled
+                                isSearchable
+                                classNames={selectStyles}
+                            />
                         </div>
 
                     </div>
@@ -720,90 +757,43 @@ export default function UsersPage() {
 
                             </div>
 
-                            {/* SEARCHABLE PROFILE */}
-                            <div className="dropdown w-full">
+                            <div>
+                                <Select
+                                    options={profiles.map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                    }))}
 
-                                <div
-                                    tabIndex={0}
-                                    role="button"
-                                    className="btn btn-outline w-full justify-between"
-                                    onClick={() => setProfileOpen(!profileOpen)}
-                                >
+                                    value={
+                                        profiles
+                                            .map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                            }))
+                                            .find(
+                                                (opt) =>
+                                                    opt.value === Number(watch("profileId"))
+                                            ) || null
+                                    }
 
-                                    {watch("profileId")
-                                        ? profiles.find(
-                                            (p) =>
-                                                p.id ===
-                                                Number(
-                                                    watch("profileId")
-                                                )
-                                        )?.name
-                                        : "Sélectionner un profil"}
+                                    onChange={(selected: any) =>
+                                        setValue("profileId", String(selected?.value || ""), {
+                                            shouldValidate: true,
+                                            shouldDirty: true,
+                                        })
+                                    }
 
-                                    <ChevronDown size={16} />
-
-                                </div>
-
-                                <div
-                                    tabIndex={0}
-                                    className="dropdown-content z-[100] card card-compact w-full bg-base-100 shadow border border-base-300 mt-2"
-                                >
-
-                                    <div className="card-body p-2">
-
-                                        {/* SEARCH */}
-                                        <label className="input input-bordered flex items-center gap-2">
-
-                                            <Search size={16} />
-
-                                            <input
-                                                type="text"
-                                                className="grow w-full"
-                                                placeholder="Rechercher profil..."
-                                                value={profileSearch}
-                                                onChange={(e) =>
-                                                    setProfileSearch(
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-
-                                        </label>
-
-                                        {/* LIST */}
-                                        <div className="max-h-52 overflow-y-auto mt-2">
-
-                                            {filteredProfiles.map((p) => (
-
-                                                <button
-                                                    type="button"
-                                                    key={p.id}
-                                                    className="btn btn-ghost justify-start w-full"
-                                                    onClick={() => {
-                                                        setValue("profileId", String(p.id), {
-                                                            shouldValidate: true,
-                                                            shouldDirty: true,
-                                                        });
-
-                                                        setProfileOpen(false); // ferme la liste
-                                                    }}
-                                                >
-                                                    {p.name}
-                                                </button>
-
-                                            ))}
-                                        </div>
-
-                                    </div>
-
-                                </div>
+                                    placeholder="Sélectionner un profil"
+                                    isSearchable
+                                    unstyled
+                                    classNames={selectStyles}
+                                />
 
                                 {errors.profileId && (
                                     <p className="text-error text-sm mt-1">
                                         {errors.profileId.message}
                                     </p>
                                 )}
-
                             </div>
 
                             {/* FOOTER */}
@@ -909,21 +899,33 @@ export default function UsersPage() {
 
                             {/* PROFILE */}
                             <div>
-                                <select
-                                    className="select select-bordered w-full"
-                                    {...registerEdit("profileId")}
-                                >
-                                    <option value="">Profil</option>
+                                <Select
+                                    options={profiles.map((p: any) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                    }))}
 
-                                    {profiles.map((p) => (
-                                        <option
-                                            key={p.id}
-                                            value={Number(p.id)}
-                                        >
-                                            {p.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    value={
+                                        profiles
+                                            .map((p: any) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                            }))
+                                            .find((opt: any) => opt.value === Number(watch("profileId"))) || null
+                                    }
+
+                                    onChange={(selected: any) =>
+                                        setValueEdit("profileId", String(selected?.value || ""), {
+                                            shouldValidate: true,
+                                            shouldDirty: true,
+                                        })
+                                    }
+
+                                    placeholder="Profil"
+                                    unstyled
+                                    isSearchable
+                                    classNames={selectStyles}
+                                />
 
                                 {errorsEdit.profileId?.message && (
                                     <p className="text-error text-sm">
