@@ -623,21 +623,16 @@ export default function UnitePage() {
                                 className="btn btn-primary"
                                 disabled={saving}
                                 onClick={async () => {
+                                    setSaving(true);
 
                                     try {
-
-                                        setSaving(true);
 
                                         if (!selectedUniteId) {
                                             toast.error("Unité invalide");
                                             return;
                                         }
 
-                                        if (
-                                            !loadForm.provinceId ||
-                                            !loadForm.controleurId ||
-                                            !loadForm.equipeId
-                                        ) {
+                                        if (!loadForm.provinceId || !loadForm.controleurId || !loadForm.equipeId) {
                                             toast.error("Tous les champs sont obligatoires");
                                             return;
                                         }
@@ -652,7 +647,6 @@ export default function UnitePage() {
                                         toast.success("Unité chargée avec succès");
 
                                         setLoadModal(false);
-
                                         setLoadForm({
                                             provinceId: "",
                                             controleurId: "",
@@ -664,16 +658,22 @@ export default function UnitePage() {
                                     } catch (err: any) {
                                         console.error(err);
 
-                                        const message =
-                                            err?.response?.data?.message ||   // format JSON backend
-                                            err?.response?.data ||            // string brut backend
-                                            err?.message ||                   // erreur axios réseau
-                                            "Erreur lors du chargement de l’unité";
+                                        let message = "Erreur serveur";
+
+                                        const data = err?.response?.data;
+
+                                        if (typeof data === "string") {
+                                            message = data;
+                                        } else if (data?.message) {
+                                            message = data.message;
+                                        } else if (err?.message) {
+                                            message = err.message;
+                                        }
 
                                         toast.error(message);
-                                    } finally {
 
-                                        setSaving(false);
+                                    } finally {
+                                        setSaving(false); // 🔥 TOUJOURS exécuté
                                     }
                                 }}
                             >
