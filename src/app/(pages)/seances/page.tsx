@@ -158,7 +158,16 @@ export default function SeancesPage() {
 
         if (res.isConfirmed) {
             await deleteSeance(id);
-            toast.success("Supprimée");
+
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ["#ef4444", "#f87171", "#fca5a5"]
+            });
+
+            toast.success("Séance supprimée");
+
             fetchData();
         }
     };
@@ -283,16 +292,39 @@ export default function SeancesPage() {
 
 
                                         <td>
-                                            {s.isActive ? (
-                                                <span className="badge badge-success">Active</span>
+
+                                            {s.dateFin ? (
+
+                                                <span className="badge badge-neutral">
+                                                    Terminée
+                                                </span>
+
+                                            ) : s.isActive ? (
+
+                                                <span className="badge badge-success">
+                                                    Active
+                                                </span>
+
                                             ) : (
-                                                <span className="badge badge-warning">En attente</span>
+
+                                                <span className="badge badge-warning">
+                                                    En attente
+                                                </span>
+
                                             )}
+
                                         </td>
 
                                         <td className="flex gap-2">
 
-                                            {!s.isActive ? (
+                                            {s.dateFin ? (
+
+                                                <span className="badge badge-neutral">
+                                                    Terminée
+                                                </span>
+
+                                            ) : !s.isActive ? (
+
                                                 <button
                                                     className="btn btn-xs btn-success"
                                                     onClick={async () => {
@@ -310,12 +342,13 @@ export default function SeancesPage() {
                                                         if (!res.isConfirmed) return;
 
                                                         try {
+
                                                             await startSeance(s.id);
+
                                                             confetti({
-                                                                particleCount: 80,
-                                                                spread: 70,
-                                                                origin: { y: 0.7 },
-                                                                colors: ["#f59e0b", "#ef4444", "#facc15"]
+                                                                particleCount: 120,
+                                                                spread: 90,
+                                                                origin: { y: 0.6 }
                                                             });
 
                                                             toast.success("Séance démarrée");
@@ -323,13 +356,16 @@ export default function SeancesPage() {
                                                             fetchData();
 
                                                         } catch {
+
                                                             toast.error("Erreur démarrage");
                                                         }
                                                     }}
                                                 >
                                                     Démarrer
                                                 </button>
+
                                             ) : (
+
                                                 <button
                                                     className="btn btn-xs btn-warning"
                                                     onClick={async () => {
@@ -349,6 +385,7 @@ export default function SeancesPage() {
                                                         try {
 
                                                             await finishSeance(s.id);
+
                                                             confetti({
                                                                 particleCount: 80,
                                                                 spread: 70,
