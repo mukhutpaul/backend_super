@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import Select from "react-select";
 
 import {
     getMissions,
@@ -378,86 +379,139 @@ export default function MissionsPage() {
 
                     </div>
                 </div>
-                 </div>
+            </div>
 
-                {/* CREATE MODAL */}
-                {openModal && (
-                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+            {/* CREATE MODAL */}
+            {openModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-                        <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
+                    <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
 
-                            <h2 className="text-xl font-bold mb-4">
-                                Nouvelle mission
-                            </h2>
+                        <h2 className="text-xl font-bold mb-4">
+                            Nouvelle mission
+                        </h2>
 
-                            <input
-                                className="input input-bordered w-full mb-2"
-                                placeholder="Zone"
-                                value={form.zone}
-                                onChange={(e) => {
-                                    const zone = e.target.value;
+                        <input
+                            className="input input-bordered w-full mb-2"
+                            placeholder="Zone"
+                            value={form.zone}
+                            onChange={(e) => {
+                                const zone = e.target.value;
 
-                                    setForm((prev) => ({
-                                        ...prev,
-                                        zone,
-                                        numero: generateMissionNumber(zone), // auto update
-                                    }));
+                                setForm((prev) => ({
+                                    ...prev,
+                                    zone,
+                                    numero: generateMissionNumber(zone), // auto update
+                                }));
+                            }}
+                        />
+
+                        <input
+                            className="input input-bordered w-full mb-2"
+                            placeholder="Numéro mission"
+                            value={form.numero}
+                            readOnly
+                        />
+
+
+                        <div className="mb-4">
+
+                            <label className="label">
+                                <span className="label-text">
+                                    Chef mission (SUPERVISEUR)
+                                </span>
+                            </label>
+
+                            <Select
+                                unstyled
+                                isSearchable
+                                placeholder="Rechercher superviseur..."
+
+                                options={superviseurs.map((u: any) => ({
+                                    value: u.id,
+                                    label: u.noms || u.username,
+                                }))}
+
+                                value={
+                                    superviseurs
+                                        .map((u: any) => ({
+                                            value: u.id,
+                                            label: u.noms || u.username,
+                                        }))
+                                        .find(
+                                            (opt: any) =>
+                                                opt.value === form.chargeMissionId
+                                        ) || null
+                                }
+
+                                onChange={(selected: any) =>
+                                    setForm({
+                                        ...form,
+                                        chargeMissionId: selected?.value || 0,
+                                    })
+                                }
+
+                                classNames={{
+                                    control: () =>
+                                        "input input-bordered w-full min-h-[48px] flex flex-wrap px-2",
+
+                                    valueContainer: () =>
+                                        "flex gap-1 items-center",
+
+                                    input: () =>
+                                        "text-sm text-base-content",
+
+                                    placeholder: () =>
+                                        "text-base-content/50 text-sm",
+
+                                    menu: () =>
+                                        "bg-base-100 border border-base-300 rounded-box shadow-lg mt-2 z-50 overflow-hidden",
+
+                                    option: ({ isFocused, isSelected }) =>
+                                                                `
+                                    px-4 py-2 cursor-pointer text-sm
+                                    ${isFocused ? "bg-base-200" : ""}
+                                    ${isSelected ? "bg-primary text-primary-content" : ""}
+                                `,
+
+                                    singleValue: () =>
+                                        "text-sm text-base-content",
+
+                                    dropdownIndicator: () =>
+                                        "px-2 text-base-content/70",
+
+                                    indicatorSeparator: () =>
+                                        "hidden",
+
+                                    menuList: () =>
+                                        "max-h-60 overflow-y-auto",
                                 }}
                             />
 
-                            <input
-                                className="input input-bordered w-full mb-2"
-                                placeholder="Numéro mission"
-                                value={form.numero}
-                                readOnly
-                            />
+                        </div>
 
+                        <div className="flex justify-end gap-2">
 
-                            <select
-                                className="select select-bordered w-full mb-4"
-                                onChange={(e) =>
-                                    setForm({
-                                        ...form,
-                                        chargeMissionId: Number(e.target.value),
-                                    })
-                                }
-                                value={form.chargeMissionId || ""}
+                            <button
+                                className="btn"
+                                onClick={() => setOpenModal(false)}
                             >
+                                Annuler
+                            </button>
 
-                                <option value="">
-                                    Sélectionner chef mission (SUPERVISEUR)
-                                </option>
-
-                                {superviseurs.map((u) => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.noms || u.username}
-                                    </option>
-                                ))}
-
-                            </select>
-
-                            <div className="flex justify-end gap-2">
-
-                                <button
-                                    className="btn"
-                                    onClick={() => setOpenModal(false)}
-                                >
-                                    Annuler
-                                </button>
-
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={handleCreate}
-                                >
-                                    Créer
-                                </button>
-
-                            </div>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleCreate}
+                            >
+                                Créer
+                            </button>
 
                         </div>
 
                     </div>
-                )}
+
+                </div>
+            )}
 
         </DashboardLayout>
     );
