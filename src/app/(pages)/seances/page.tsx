@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import confetti from "canvas-confetti";
 
 import {
     getSeances,
@@ -310,6 +311,12 @@ export default function SeancesPage() {
 
                                                         try {
                                                             await startSeance(s.id);
+                                                            confetti({
+                                                                particleCount: 80,
+                                                                spread: 70,
+                                                                origin: { y: 0.7 },
+                                                                colors: ["#f59e0b", "#ef4444", "#facc15"]
+                                                            });
 
                                                             toast.success("Séance démarrée");
 
@@ -342,6 +349,12 @@ export default function SeancesPage() {
                                                         try {
 
                                                             await finishSeance(s.id);
+                                                            confetti({
+                                                                particleCount: 80,
+                                                                spread: 70,
+                                                                origin: { y: 0.7 },
+                                                                colors: ["#f59e0b", "#ef4444", "#facc15"]
+                                                            });
 
                                                             toast.success("Séance terminée");
 
