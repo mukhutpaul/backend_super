@@ -6,6 +6,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Search, X, Pencil, Trash2 } from "lucide-react";
+import { chargerUnite } from "@/services/unite-charge.service";
+
+
+
 
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -16,6 +20,10 @@ import {
     updateUnite,
     deleteUnite,
 } from "@/services/unite.service";
+import Select from "react-select";
+import { getMissions } from "@/services/mission.service";
+import { getUsers } from "@/services/auth.service";
+import equipeService, { getEquipes } from "@/services/equipe.service";
 
 
 
@@ -57,9 +65,22 @@ export default function UnitePage() {
     const [openModal, setOpenModal] = useState(false);
     const [editModal, setEditModal] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [loadModal, setLoadModal] = useState(false);
+
+    const [provinces, setProvinces] = useState<any[]>([]);
+    const [controleurs, setControleurs] = useState<any[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [equipes, setEquipes] = useState<any[]>([]);
+    const [selectedUniteId, setSelectedUniteId] = useState<number | null>(null);
 
     const [page, setPage] = useState(1);
     const limit = 20;
+
+    const [loadForm, setLoadForm] = useState({
+        provinceId: "",
+        controleurId: "",
+        equipeId: "",
+    });
 
     /* ========================= FORM ========================= */
 
@@ -81,6 +102,38 @@ export default function UnitePage() {
     });
 
     /* ========================= LOAD DATA ========================= */
+
+    useEffect(() => {
+        fetchData();
+
+
+
+        const loadData = async () => {
+            try {
+
+                const [prov, users, eq] = await Promise.all([
+                    getMissions(),
+                    getUsers(),
+                    getEquipes()
+                ]);
+
+                setProvinces(prov);
+
+                // filtre contrôleurs côté front
+                setControleurs(
+                    users.filter((u: any) => u.profile?.name === "CONTROLEUR")
+                );
+
+                setEquipes(eq);
+
+            } catch (err) {
+                console.error(err);
+                toast.error("Erreur chargement données");
+            }
+        };
+
+        loadData();
+    }, []);
 
     const fetchData = async () => {
         setLoading(true);
@@ -297,6 +350,17 @@ export default function UnitePage() {
                                                     <Trash2 size={14} />
                                                 </button>
 
+                                                <button
+                                                    className="btn btn-xs btn-info"
+                                                    onClick={() => {
+                                                        setSelectedUniteId(u.id);
+
+                                                        setLoadModal(true);
+                                                    }}
+                                                >
+                                                    Charger l’unité
+                                                </button>
+
                                             </td>
 
                                         </tr>
@@ -427,6 +491,203 @@ export default function UnitePage() {
                 </div>
             )}
 
-        </DashboardLayout>
+            {loadModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+                    <div className="bg-base-100 p-10 rounded-2xl w-full max-w-5xl space-y-7 shadow-2xl">
+
+                        <h2 className="text-2xl font-bold">
+                            Charger l’unité
+                        </h2>
+
+                        {/* GRID FORM */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                            {/* PROVINCE */}
+                            <div className="form-control space-y-3">
+
+                                <label className="label">
+                                    <span className="label-text font-semibold">
+                                        Province
+                                    </span>
+                                </label>
+
+                                <Select
+                                    placeholder="Choisir une province"
+                                    value={
+                                        provinces
+                                            .map((p: any) => ({
+                                                value: p.id,
+                                                label: p.zone,
+                                            }))
+                                            .find((opt: any) => opt.value == loadForm.provinceId)
+                                    }
+                                    className="text-sm"
+                                    classNames={{
+                                        control: () =>
+                                            "input input-bordered w-full min-h-[56px] px-3",
+                                        menu: () =>
+                                            "bg-base-100 border border-base-300 rounded-box shadow-xl",
+                                    }}
+                                    options={provinces.map((p: any) => ({
+                                        value: p.id,
+                                        label: p.zone,
+                                    }))}
+                                    onChange={(opt: any) =>
+                                        setLoadForm({
+                                            ...loadForm,
+                                            provinceId: opt?.value,
+                                        })
+                                    }
+                                />
+
+                            </div>
+
+                            {/* CONTRÔLEUR */}
+                            <div className="form-control space-y-3">
+
+                                <label className="label">
+                                    <span className="label-text font-semibold">
+                                        Contrôleur
+                                    </span>
+                                </label>
+
+                                <Select
+                                    placeholder="Choisir un contrôleur"
+                                    className="text-sm"
+                                    classNames={{
+                                        control: () =>
+                                            "input input-bordered w-full min-h-[56px] px-3",
+                                        menu: () =>
+                                            "bg-base-100 border border-base-300 rounded-box shadow-xl",
+                                    }}
+                                    options={controleurs.map((u: any) => ({
+                                        value: u.id,
+                                        label: u.noms || u.username,
+                                    }))}
+                                    onChange={(opt: any) =>
+                                        setLoadForm({
+                                            ...loadForm,
+                                            controleurId: opt?.value,
+                                        })
+                                    }
+                                />
+
+                            </div>
+
+                            {/* ÉQUIPE */}
+                            <div className="form-control space-y-3">
+
+                                <label className="label">
+                                    <span className="label-text font-semibold">
+                                        Équipe
+                                    </span>
+                                </label>
+
+                                <Select
+                                    placeholder="Choisir une équipe"
+                                    className="text-sm"
+                                    classNames={{
+                                        control: () =>
+                                            "input input-bordered w-full min-h-[56px] px-3",
+                                        menu: () =>
+                                            "bg-base-100 border border-base-300 rounded-box shadow-xl",
+                                    }}
+                                    options={equipes.map((e: any) => ({
+                                        value: e.id,
+                                        label: 'EQUIPE-' + e.user?.noms || e.user?.username,
+                                    }))}
+                                    onChange={(opt: any) =>
+                                        setLoadForm({
+                                            ...loadForm,
+                                            equipeId: opt?.value,
+                                        })
+                                    }
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* ACTIONS */}
+                        <div className="flex justify-end gap-4 pt-6 border-t border-base-300">
+
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setLoadModal(false)}
+                            >
+                                Annuler
+                            </button>
+
+                            <button
+                                className="btn btn-primary"
+                                disabled={saving}
+                                onClick={async () => {
+
+                                    try {
+
+                                        setSaving(true);
+
+                                        if (!selectedUniteId) {
+                                            toast.error("Unité invalide");
+                                            return;
+                                        }
+
+                                        if (
+                                            !loadForm.provinceId ||
+                                            !loadForm.controleurId ||
+                                            !loadForm.equipeId
+                                        ) {
+                                            toast.error("Tous les champs sont obligatoires");
+                                            return;
+                                        }
+
+                                        await chargerUnite({
+                                            uniteId: selectedUniteId,
+                                            missionId: Number(loadForm.provinceId),
+                                            equipeId: Number(loadForm.equipeId),
+                                            userId: Number(loadForm.controleurId),
+                                        });
+
+                                        toast.success("Unité chargée avec succès");
+
+                                        setLoadModal(false);
+
+                                        setLoadForm({
+                                            provinceId: "",
+                                            controleurId: "",
+                                            equipeId: "",
+                                        });
+
+                                        fetchData();
+
+                                    } catch (err: any) {
+                                        console.error(err);
+
+                                        const message =
+                                            err?.response?.data?.message ||   // format JSON backend
+                                            err?.response?.data ||            // string brut backend
+                                            err?.message ||                   // erreur axios réseau
+                                            "Erreur lors du chargement de l’unité";
+
+                                        toast.error(message);
+                                    } finally {
+
+                                        setSaving(false);
+                                    }
+                                }}
+                            >
+                                {saving ? "Chargement..." : "Ajouter"}
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )
+            }
+
+        </DashboardLayout >
     );
 }

@@ -23,6 +23,8 @@ const equipeService = {
     return response.data;
   },
 
+
+
   getAll: async (): Promise<Equipe[]> => {
     const response = await api.get("/equipes");
     return response.data;
@@ -45,3 +47,8 @@ const equipeService = {
 };
 
 export default equipeService;
+
+export const getEquipes = async (): Promise<Equipe[]> => {
+    const res = await api.get("/equipes");
+    return res.data;
+};
