@@ -13,6 +13,7 @@ export type LoginPayload = {
 
 export type LoginResponse = {
   token: string;
+  id:number,
   username: string;
   email?: string;
   noms?: string;
@@ -91,6 +92,7 @@ export const logout = (): void => {
 
 export const saveSession = (data: LoginResponse): void => {
   localStorage.setItem("token", data.token);
+  localStorage.setItem("id", String(data.id));
   localStorage.setItem("username", data.username);
   localStorage.setItem("profile", data.profile || "");
   localStorage.setItem("user", JSON.stringify(data));

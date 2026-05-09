@@ -6,8 +6,7 @@ import { api } from "@/lib/axios";
 export type Seance = {
     id: number;
     dateSeance: string;
-    heureDebut?: string | null; // 👈 optionnel
-    heureFin?: string | null;   // 👈 optionnel
+    dateFin?: string | null;   // 👈 optionnel
     isActive: boolean;
 
     chefEquipe?: {
@@ -27,11 +26,8 @@ export type Seance = {
  * ➕ CREATE (heure non obligatoire)
  */
 export type CreateSeancePayload = {
-    dateSeance: string;
-    heureDebut?: string | null;
-    heureFin?: string | null;
-    chefEquipeId: number;
     missionId: number;
+    chefEquipeId: number;
 };
 
 /**
@@ -39,11 +35,20 @@ export type CreateSeancePayload = {
  */
 export type UpdateSeancePayload = {
     dateSeance?: string;
-    heureDebut?: string | null;
-    heureFin?: string | null;
+    dateFin?: string | null;
     chefEquipeId?: number;
     missionId?: number;
     isActive?: boolean;
+};
+
+export const startSeance = async (id: number) => {
+    const res = await api.put(`/seances/${id}/start`);
+    return res.data;
+};
+
+export const finishSeance = async (id: number) => {
+    const res = await api.put(`/seances/${id}/finish`);
+    return res.data;
 };
 
 /**

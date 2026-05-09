@@ -9,7 +9,9 @@ import {
     getSeances,
     createSeance,
     deleteSeance,
-    Seance
+    Seance,
+    finishSeance,
+    startSeance
 } from "@/services/seance.service";
 
 import { getMissions } from "@/services/mission.service";
@@ -20,12 +22,15 @@ import { Trash2, Inbox, Search } from "lucide-react";
 /**
  * FORM
  */
+// type FormData = {
+//     dateSeance: string;
+//     heureDebut?: string;
+//     heureFin?: string;
+//     missionId: number;
+//     chefEquipeId: number;
+// };
 type FormData = {
-    dateSeance: string;
-    heureDebut?: string;
-    heureFin?: string;
     missionId: number;
-    chefEquipeId: number;
 };
 
 export default function SeancesPage() {
@@ -35,6 +40,7 @@ export default function SeancesPage() {
     const [superviseurs, setSuperviseurs] = useState<any[]>([]);
 
     const [loading, setLoading] = useState(false);
+
 
     const [openModal, setOpenModal] = useState(false);
 
@@ -47,11 +53,7 @@ export default function SeancesPage() {
     const limit = 20;
 
     const [form, setForm] = useState<FormData>({
-        dateSeance: "",
-        heureDebut: "",
-        heureFin: "",
         missionId: 0,
-        chefEquipeId: 0,
     });
 
     /**
@@ -121,12 +123,25 @@ export default function SeancesPage() {
      */
     const handleCreate = async () => {
         try {
-            await createSeance(form);
+
+            const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+            if (!user?.id) {
+                toast.error("Utilisateur non connecté");
+                return;
+            }
+            await createSeance({
+                missionId: form.missionId,
+                chefEquipeId: user.id, // ✅ important
+            });
+
             toast.success("Séance créée");
             setOpenModal(false);
             fetchData();
-        } catch {
+
+        } catch (e) {
             toast.error("Erreur création");
+            console.log(e);
         }
     };
 
@@ -222,7 +237,6 @@ export default function SeancesPage() {
                                     <th>Mission</th>
                                     <th>Chef</th>
                                     <th>Date</th>
-                                    <th>Début</th>
                                     <th>Fin</th>
                                     <th>Statut</th>
                                     <th>Actions</th>
@@ -255,9 +269,17 @@ export default function SeancesPage() {
                                         <td>{s.id}</td>
                                         <td>{s.mission?.zone}</td>
                                         <td>{s.chefEquipe?.noms}</td>
-                                        <td>{s.dateSeance}</td>
-                                        <td>{s.heureDebut || "-"}</td>
-                                        <td>{s.heureFin || "-"}</td>
+                                        <td>
+                                            {s.dateSeance
+                                                ? new Date(s.dateSeance).toLocaleString("fr-FR")
+                                                : "-"}
+                                        </td>
+                                        <td>
+                                            {s.dateFin
+                                                ? new Date(s.dateSeance).toLocaleString("fr-FR")
+                                                : "-"}
+                                        </td>
+
 
                                         <td>
                                             {s.isActive ? (
@@ -268,12 +290,80 @@ export default function SeancesPage() {
                                         </td>
 
                                         <td className="flex gap-2">
+
+                                            {!s.isActive ? (
+                                                <button
+                                                    className="btn btn-xs btn-success"
+                                                    onClick={async () => {
+
+                                                        const res = await Swal.fire({
+                                                            title: "Démarrer la séance ?",
+                                                            text: "Cette séance sera marquée comme active.",
+                                                            icon: "question",
+                                                            showCancelButton: true,
+                                                            confirmButtonText: "Oui, démarrer",
+                                                            cancelButtonText: "Annuler",
+                                                            confirmButtonColor: "#16a34a"
+                                                        });
+
+                                                        if (!res.isConfirmed) return;
+
+                                                        try {
+                                                            await startSeance(s.id);
+
+                                                            toast.success("Séance démarrée");
+
+                                                            fetchData();
+
+                                                        } catch {
+                                                            toast.error("Erreur démarrage");
+                                                        }
+                                                    }}
+                                                >
+                                                    Démarrer
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="btn btn-xs btn-warning"
+                                                    onClick={async () => {
+
+                                                        const res = await Swal.fire({
+                                                            title: "Terminer la séance ?",
+                                                            text: "Cette séance sera clôturée.",
+                                                            icon: "warning",
+                                                            showCancelButton: true,
+                                                            confirmButtonText: "Oui, terminer",
+                                                            cancelButtonText: "Annuler",
+                                                            confirmButtonColor: "#f59e0b"
+                                                        });
+
+                                                        if (!res.isConfirmed) return;
+
+                                                        try {
+
+                                                            await finishSeance(s.id);
+
+                                                            toast.success("Séance terminée");
+
+                                                            fetchData();
+
+                                                        } catch {
+
+                                                            toast.error("Erreur fermeture");
+                                                        }
+                                                    }}
+                                                >
+                                                    Terminer
+                                                </button>
+                                            )}
+
                                             <button
                                                 className="btn btn-xs btn-error"
                                                 onClick={() => handleDelete(s.id)}
                                             >
                                                 <Trash2 size={14} />
                                             </button>
+
                                         </td>
                                     </tr>
                                 ))}
@@ -324,38 +414,19 @@ export default function SeancesPage() {
                             Nouvelle séance
                         </h2>
 
-                        <input
-                            type="date"
-                            className="input input-bordered w-full mb-2"
-                            onChange={(e) =>
-                                setForm({ ...form, dateSeance: e.target.value })
-                            }
-                        />
-
+                        {/* MISSION ONLY */}
                         <select
-                            className="select select-bordered w-full mb-2"
+                            className="select select-bordered w-full mb-4"
                             onChange={(e) =>
-                                setForm({ ...form, missionId: Number(e.target.value) })
+                                setForm({
+                                    missionId: Number(e.target.value)
+                                })
                             }
                         >
                             <option value="">Mission</option>
                             {missions.map((m) => (
                                 <option key={m.id} value={m.id}>
                                     {m.zone}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            className="select select-bordered w-full mb-4"
-                            onChange={(e) =>
-                                setForm({ ...form, chefEquipeId: Number(e.target.value) })
-                            }
-                        >
-                            <option value="">Chef équipe</option>
-                            {superviseurs.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                    {u.noms}
                                 </option>
                             ))}
                         </select>
@@ -376,6 +447,7 @@ export default function SeancesPage() {
 
                 </div>
             )}
+
 
         </DashboardLayout>
     );
