@@ -316,8 +316,28 @@ export default function MissionsPage() {
                                                 )}
                                             </td>
 
-                                            <td>{m.dateDebut || "-"}</td>
-                                            <td>{m.dateFin || "-"}</td>
+                                            <td>
+                                                {m.dateDebut
+                                                    ? new Date(m.dateDebut).toLocaleString("fr-FR", {
+                                                        day: "2-digit",
+                                                        month: "2-digit",
+                                                        year: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })
+                                                    : "-"}
+                                            </td>
+                                            <td>
+                                                {m.dateFin
+                                                    ? new Date(m.dateFin).toLocaleString("fr-FR", {
+                                                        day: "2-digit",
+                                                        month: "2-digit",
+                                                        year: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })
+                                                    : "-"}
+                                            </td>
 
                                             <td className="flex gap-2">
                                                 {!m.isActive && (
