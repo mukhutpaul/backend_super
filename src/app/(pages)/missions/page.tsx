@@ -147,8 +147,11 @@ export default function MissionsPage() {
             await startMission(id);
             toast.success("Mission activée");
             fetchMissions();
-        } catch {
-            toast.error("Erreur activation");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(
+                error.response?.data?.message || "Erreur activation"
+            );
         }
     };
 
@@ -160,8 +163,11 @@ export default function MissionsPage() {
             await closeMission(id);
             toast.success("Mission clôturée");
             fetchMissions();
-        } catch {
-            toast.error("Erreur clôture");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(
+                error.response?.data?.message || "Erreur activation"
+            );
         }
     };
 
@@ -468,7 +474,7 @@ export default function MissionsPage() {
                                         "bg-base-100 border border-base-300 rounded-box shadow-lg mt-2 z-50 overflow-hidden",
 
                                     option: ({ isFocused, isSelected }) =>
-                                                                `
+                                        `
                                     px-4 py-2 cursor-pointer text-sm
                                     ${isFocused ? "bg-base-200" : ""}
                                     ${isSelected ? "bg-primary text-primary-content" : ""}
