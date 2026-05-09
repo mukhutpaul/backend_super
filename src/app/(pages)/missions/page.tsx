@@ -176,18 +176,37 @@ export default function MissionsPage() {
      */
     const handleDelete = async (id: number) => {
         const res = await Swal.fire({
-            title: "Supprimer mission ?",
+            title: "Supprimer la mission ?",
             icon: "warning",
             showCancelButton: true,
+            confirmButtonText: "Oui",
+            cancelButtonText: "Non",
         });
 
-        if (res.isConfirmed) {
+        if (!res.isConfirmed) return;
+
+        try {
             await deleteMission(id);
-            toast.success("Supprimée");
-            fetchMissions();
+
+            toast.success("Mission supprimée");
+
+            await fetchMissions();
+
+        } catch (error: any) {
+            console.error("ERROR FULL:", error);
+
+            const data = error?.response?.data;
+
+            const message =
+                data?.message ||
+                data?.error ||
+                (typeof data === "string" ? data : null) ||
+                error?.message ||
+                "Erreur serveur";
+
+            toast.error(message);
         }
     };
-
     return (
         <DashboardLayout>
 
@@ -307,12 +326,19 @@ export default function MissionsPage() {
                                             <td>{m.id}</td>
                                             <td>{m.zone}</td>
                                             <td>{m.numero}</td>
-
                                             <td>
-                                                {m.isActive ? (
-                                                    <span className="badge badge-success">Active</span>
+                                                {m.dateFin ? (
+                                                    <span className="badge badge-neutral">
+                                                        Terminée
+                                                    </span>
+                                                ) : m.isActive ? (
+                                                    <span className="badge badge-success">
+                                                        Active
+                                                    </span>
                                                 ) : (
-                                                    <span className="badge badge-warning">En attente</span>
+                                                    <span className="badge badge-warning">
+                                                        En attente
+                                                    </span>
                                                 )}
                                             </td>
 
@@ -340,7 +366,9 @@ export default function MissionsPage() {
                                             </td>
 
                                             <td className="flex gap-2">
-                                                {!m.isActive && (
+
+                                                {/* EN ATTENTE */}
+                                                {!m.dateDebut && !m.dateFin && (
                                                     <button
                                                         className="btn btn-xs btn-success"
                                                         onClick={() => handleStart(m.id)}
@@ -349,7 +377,8 @@ export default function MissionsPage() {
                                                     </button>
                                                 )}
 
-                                                {m.isActive && (
+                                                {/* ACTIVE */}
+                                                {m.dateDebut && !m.dateFin && (
                                                     <button
                                                         className="btn btn-xs btn-warning"
                                                         onClick={() => handleClose(m.id)}
@@ -364,6 +393,7 @@ export default function MissionsPage() {
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
+
                                             </td>
                                         </tr>
                                     ))}
