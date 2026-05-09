@@ -193,19 +193,25 @@ export default function MissionsPage() {
             await fetchMissions();
 
         } catch (error: any) {
-            console.error("ERROR FULL:", error);
+    console.error("DELETE ERROR FULL:", error);
 
-            const data = error?.response?.data;
+    const data = error?.response?.data;
 
-            const message =
-                data?.message ||
-                data?.error ||
-                (typeof data === "string" ? data : null) ||
-                error?.message ||
-                "Erreur serveur";
+    const message =
+        typeof data === "string"
+            ? data
+            : data?.message
+              ? data.message
+              : error?.message || "Erreur suppression";
 
-            toast.error(message);
-        }
+    if (error?.response?.status === 403) {
+        toast.error("Accès refusé (ADMIN requis)");
+    } else if (error?.response?.status === 401) {
+        toast.error("Session expirée, reconnecte-toi");
+    } else {
+        toast.error(message);
+    }
+}
     };
     return (
         <DashboardLayout>
@@ -388,7 +394,7 @@ export default function MissionsPage() {
                                                 )}
 
                                                 <button
-                                                    className="btn btn-xs btn-error"
+                                                    className="btn btn-xs btn-error btn-outline"
                                                     onClick={() => handleDelete(m.id)}
                                                 >
                                                     <Trash2 size={14} />

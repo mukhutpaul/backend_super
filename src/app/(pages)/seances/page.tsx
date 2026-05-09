@@ -154,21 +154,40 @@ export default function SeancesPage() {
             title: "Supprimer séance ?",
             icon: "warning",
             showCancelButton: true,
+            confirmButtonText: "Oui",
+            cancelButtonText: "Non",
         });
 
-        if (res.isConfirmed) {
+        if (!res.isConfirmed) return;
+
+        try {
             await deleteSeance(id);
 
             confetti({
                 particleCount: 150,
                 spread: 100,
                 origin: { y: 0.6 },
-                colors: ["#ef4444", "#f87171", "#fca5a5"]
+                colors: ["#ef4444", "#f87171", "#fca5a5"],
             });
 
             toast.success("Séance supprimée");
 
             fetchData();
+
+        } catch (error: any) {
+
+            console.error("DELETE SEANCE ERROR:", error?.response || error);
+
+            const data = error?.response?.data;
+
+            const message =
+                data?.message ||
+                data?.error ||
+                (typeof data === "string" ? data : null) ||
+                error?.message ||
+                "Suppression impossible";
+
+            toast.error(message);
         }
     };
 
@@ -317,88 +336,64 @@ export default function SeancesPage() {
 
                                         <td className="flex gap-2">
 
-                                            {s.dateFin ? (
-
-                                                <span className="badge badge-neutral">
-                                                    Terminée
-                                                </span>
-
-                                            ) : !s.isActive ? (
-
+                                            {!s.dateFin && !s.isActive && (
                                                 <button
                                                     className="btn btn-xs btn-success"
                                                     onClick={async () => {
-
                                                         const res = await Swal.fire({
                                                             title: "Démarrer la séance ?",
-                                                            text: "Cette séance sera marquée comme active.",
                                                             icon: "question",
                                                             showCancelButton: true,
-                                                            confirmButtonText: "Oui, démarrer",
-                                                            cancelButtonText: "Annuler",
-                                                            confirmButtonColor: "#16a34a"
                                                         });
 
                                                         if (!res.isConfirmed) return;
 
                                                         try {
-
                                                             await startSeance(s.id);
 
                                                             confetti({
                                                                 particleCount: 120,
                                                                 spread: 90,
-                                                                origin: { y: 0.6 }
+                                                                origin: { y: 0.6 },
                                                             });
 
                                                             toast.success("Séance démarrée");
-
                                                             fetchData();
 
                                                         } catch {
-
                                                             toast.error("Erreur démarrage");
                                                         }
                                                     }}
                                                 >
                                                     Démarrer
                                                 </button>
+                                            )}
 
-                                            ) : (
-
+                                            {!s.dateFin && s.isActive && (
                                                 <button
                                                     className="btn btn-xs btn-warning"
                                                     onClick={async () => {
-
                                                         const res = await Swal.fire({
                                                             title: "Terminer la séance ?",
-                                                            text: "Cette séance sera clôturée.",
                                                             icon: "warning",
                                                             showCancelButton: true,
-                                                            confirmButtonText: "Oui, terminer",
-                                                            cancelButtonText: "Annuler",
-                                                            confirmButtonColor: "#f59e0b"
                                                         });
 
                                                         if (!res.isConfirmed) return;
 
                                                         try {
-
                                                             await finishSeance(s.id);
 
                                                             confetti({
                                                                 particleCount: 80,
                                                                 spread: 70,
                                                                 origin: { y: 0.7 },
-                                                                colors: ["#f59e0b", "#ef4444", "#facc15"]
                                                             });
 
                                                             toast.success("Séance terminée");
-
                                                             fetchData();
 
                                                         } catch {
-
                                                             toast.error("Erreur fermeture");
                                                         }
                                                     }}
@@ -407,12 +402,15 @@ export default function SeancesPage() {
                                                 </button>
                                             )}
 
-                                            <button
-                                                className="btn btn-xs btn-error"
-                                                onClick={() => handleDelete(s.id)}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                            {/* SUPPRESSION uniquement si pas terminée */}
+                                            {!s.dateFin && (
+                                                <button
+                                                    className="btn btn-xs btn-error btn-outline"
+                                                    onClick={() => handleDelete(s.id)}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
 
                                         </td>
                                     </tr>
