@@ -11,6 +11,8 @@ import Select from "react-select";
 import equipeService, { Equipe } from "@/services/equipe.service";
 import { getUsers } from "@/services/auth.service";
 import { getMissions } from "@/services/mission.service";
+import { Eye } from "lucide-react";
+import { getUnitesByEquipe } from "@/services/equipe.service";
 
 import {
     Trash2,
@@ -77,6 +79,10 @@ export default function EquipesPage() {
     const [editModal, setEditModal] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [openViewUnits, setOpenViewUnits] = useState(false);
+    const [selectedEquipe, setSelectedEquipe] = useState<any>(null);
+    const [unitesEquipe, setUnitesEquipe] = useState<any[]>([]);
+    const [loadingUnites, setLoadingUnites] = useState(false);
 
     const [filters, setFilters] = useState({
         search: "",
@@ -88,6 +94,29 @@ export default function EquipesPage() {
         missionId: 0,
         isActive: true,
     });
+    const fetchUnitesEquipe = async (equipeId: number) => {
+        setLoadingUnites(true);
+        setUnitesEquipe([]);
+
+        try {
+            const data = await getUnitesByEquipe(equipeId);
+
+            console.log("UNITS API:", data);
+
+            setUnitesEquipe(data);
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Erreur chargement unités");
+        } finally {
+            setLoadingUnites(false);
+        }
+    };
+
+    const handleViewUnits = (equipe: any) => {
+        setSelectedEquipe(equipe);
+        setOpenViewUnits(true);
+    };
 
     const [page, setPage] = useState(1);
 
@@ -461,6 +490,18 @@ export default function EquipesPage() {
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
+                                                    <button
+                                                        className="btn btn-xs btn-success"
+                                                        onClick={async () => {
+                                                            setSelectedEquipe(e);
+
+                                                            await fetchUnitesEquipe(e.id);
+
+                                                            setOpenViewUnits(true);
+                                                        }}
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
 
                                                 </td>
 
@@ -539,6 +580,101 @@ export default function EquipesPage() {
                 )}
 
             </div>
+            {openViewUnits && selectedEquipe && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+                    <div className="bg-base-100 w-full max-w-2xl rounded-xl shadow-xl p-6">
+
+                        {/* HEADER */}
+                        <div className="flex justify-between items-center mb-5 border-b pb-3">
+
+                            <h2 className="text-xl font-bold">
+                                Liste des unités affectées à cette équipe
+                            </h2>
+
+                            <button
+                                className="btn btn-sm btn-circle"
+                                onClick={() => setOpenViewUnits(false)}
+                            >
+                                ✕
+                            </button>
+
+                        </div>
+
+                        {/* CONTENT */}
+                        <div className="space-y-3">
+
+                            <div className="p-3 bg-base-200 rounded-lg">
+                                <p className="font-semibold">
+                                    Équipe :
+                                </p>
+
+                                <p>
+                                    Equipe-{selectedEquipe.user?.username}
+                                </p>
+                            </div>
+
+                            <div className="p-3 bg-base-200 rounded-lg">
+                                <p className="font-semibold">
+                                    Mission :
+                                </p>
+
+                                <p>
+                                    {selectedEquipe.mission?.numero}
+                                </p>
+                            </div>
+
+                            {/* PLACEHOLDER UNITES */}
+                            <div className="mt-4">
+
+                                <p className="font-semibold mb-2">
+                                    Unités affectées :
+                                </p>
+
+                                <div className="p-4 border rounded-lg text-sm opacity-70">
+
+                                    {/* ici tu brancheras API plus tard */}
+                                    {loadingUnites ? (
+                                        <div className="flex justify-center py-6">
+                                            <span className="loading loading-spinner"></span>
+                                        </div>
+                                    ) : unitesEquipe.length === 0 ? (
+                                        <div className="p-4 border rounded-lg text-sm opacity-70">
+                                            Aucune unité affectée à cette équipe
+                                        </div>
+                                    ) : (
+                                        <div className="max-h-80 overflow-y-auto pr-2 space-y-2">
+
+                                            {unitesEquipe.map((u: any) => (
+                                                <div
+                                                    key={u.id}
+                                                    className="flex justify-between items-center p-3 bg-base-200 rounded-lg"
+                                                >
+                                                    <div>
+                                                        <p className="font-semibold">{u.name}</p>
+
+                                                        {u.commandant && (
+                                                            <p className="text-xs opacity-70">
+                                                                Cmdt: {u.commandant.name}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                        </div>
+                                    )}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
         </DashboardLayout>
     );
 }
@@ -660,4 +796,6 @@ function EquipeModal({
 
         </div>
     );
+
+
 }

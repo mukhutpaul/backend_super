@@ -4,7 +4,7 @@ export type Unite = {
     id: number;
     name: string;
     signature?: string | null;
-
+  
     commandant?: {
         uuid: string;
         name: string;
@@ -36,6 +36,20 @@ export const getUnites = async (): Promise<Unite[]> => {
 
     return response.data;
 };
+
+export const checkUniteExists = async (
+    uniteId: number
+): Promise<{ exists: boolean }> => {
+
+    const response = await api.get(
+        `/unites/exists/${uniteId}`
+    );
+
+    return response.data;
+};
+
+
+
 
 // =========================
 // GET BY ID

@@ -12,6 +12,10 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 
+type UniteWithExists = Unite & {
+    exists?: boolean;
+};
+
 export const selectStyles = {
     control: () =>
         "input input-bordered w-full min-h-[48px] flex flex-wrap px-2",
@@ -53,6 +57,7 @@ import {
     createUnite,
     updateUnite,
     deleteUnite,
+    checkUniteExists,
 } from "@/services/unite.service";
 import Select from "react-select";
 import { getMissions } from "@/services/mission.service";
@@ -73,6 +78,7 @@ type Unite = {
     name: string;
     signature?: string;
     commandant?: Person;
+    equipeaf?: string;
 };
 
 /* ========================= VALIDATION ========================= */
@@ -99,7 +105,9 @@ export default function UnitePage() {
     const [openModal, setOpenModal] = useState(false);
     const [editModal, setEditModal] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [existsMap, setExistsMap] = useState<Record<number, boolean>>({});
     const [loadModal, setLoadModal] = useState(false);
+    
 
     const [provinces, setProvinces] = useState<any[]>([]);
     const [controleurs, setControleurs] = useState<any[]>([]);
@@ -179,6 +187,7 @@ export default function UnitePage() {
                 data.map((u: any) => ({
                     ...u,
                     signature: u.signature ?? undefined, // ✅ FIX IMPORTANT
+                    equipeaf: u.equipeaf ?? undefined,
                 }))
             );
 
@@ -187,10 +196,11 @@ export default function UnitePage() {
         }
     };
 
-
+    
 
     useEffect(() => {
         fetchData();
+
     }, []);
 
     /* ========================= FILTER ========================= */
@@ -206,29 +216,8 @@ export default function UnitePage() {
         page * limit
     );
 
-    /* ========================= CREATE ========================= */
+   
 
-    // const onCreate = async (data: FormData) => {
-    //     try {
-    //         await createUnite({
-    //             name: data.name,
-    //             signature: data.signature,
-    //             commandant: data.commandantId
-    //                 ? { uuid: data.commandantId }
-    //                 : null,
-    //         });
-
-    //         toast.success("Unité créée");
-    //         setOpenModal(false);
-    //         reset();
-    //         fetchData();
-
-    //     } catch {
-    //         toast.error("Erreur création");
-    //     }
-    // };
-
-    /* ========================= EDIT ========================= */
 
     const openEdit = (u: Unite) => {
         setEditingId(u.id);
@@ -241,29 +230,7 @@ export default function UnitePage() {
         });
     };
 
-    // const onUpdate = async (data: FormData) => {
-    //     if (!editingId) return;
 
-    //     try {
-    //         await updateUnite(editingId, {
-    //             name: data.name,
-    //             signature: data.signature,
-    //             commandant: data.commandantId
-    //                 ? { uuid: data.commandantId }
-    //                 : null,
-    //         });
-
-    //         toast.success("Modifié");
-    //         setEditModal(false);
-    //         setEditingId(null);
-    //         fetchData();
-
-    //     } catch {
-    //         toast.error("Erreur modification");
-    //     }
-    // };
-
-    /* ========================= DELETE ========================= */
 
     const onDelete = async (id: number) => {
         const res = await Swal.fire({
@@ -367,34 +334,20 @@ export default function UnitePage() {
                                             <td>{u.id}</td>
                                             <td>{u.name}</td>
                                             <td>{u.commandant?.name || "-"}</td>
+                                       
 
                                             <td className="flex gap-2">
-
-                                                <button
-                                                    className="btn btn-xs"
-                                                    onClick={() => openEdit(u)}
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-
-                                                <button
-                                                    className="btn btn-xs text-error"
-                                                    onClick={() => onDelete(u.id)}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-
-                                                <button
-                                                    className="btn btn-xs btn-info"
-                                                    onClick={() => {
-                                                        setSelectedUniteId(u.id);
-
-                                                        setLoadModal(true);
-                                                    }}
-                                                >
-                                                    Charger l’unité
-                                                </button>
-
+                                              
+                                                    <button
+                                                        className="btn btn-xs btn-info btn-outline"
+                                                        onClick={() => {
+                                                            setSelectedUniteId(u.id);
+                                                            setLoadModal(true);
+                                                        }}
+                                                    >
+                                                        Charger l’unité
+                                                    </button>
+                                                
                                             </td>
 
                                         </tr>
@@ -556,7 +509,7 @@ export default function UnitePage() {
                                             }))
                                             .find((opt: any) => opt.value == loadForm.provinceId)
                                     }
-                                   unstyled
+                                    unstyled
                                     isSearchable
                                     classNames={selectStyles}
                                     options={provinces.map((p: any) => ({
@@ -665,6 +618,8 @@ export default function UnitePage() {
                                             equipeId: Number(loadForm.equipeId),
                                             userId: Number(loadForm.controleurId),
                                         });
+
+                                     
 
                                         confetti({
                                             particleCount: 120,

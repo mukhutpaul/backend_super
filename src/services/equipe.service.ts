@@ -52,3 +52,8 @@ export const getEquipes = async (): Promise<Equipe[]> => {
     const res = await api.get("/equipes");
     return res.data;
 };
+
+export const getUnitesByEquipe = async (equipeId: number) => {
+    const response = await api.get(`/equipe-unites/${equipeId}/unites`);
+    return response.data;
+};
