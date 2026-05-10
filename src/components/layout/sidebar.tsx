@@ -34,7 +34,7 @@ export default function Sidebar({
   const navLinks: NavLink[] = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "SUPERVISEUR"] },
     { href: "/policiers", icon: Users, label: "Policiers", auth: true, roles: ["ADMIN", "SUPERVISEUR"] },
-    { href: "/controle", icon: ClipboardCheck, label: "Contrôles", auth: true, roles: ["ADMIN"] },
+    { href: "/controles", icon: ClipboardCheck, label: "Contrôles", auth: true, roles: ["ADMIN"] },
     { href: "/users", icon: Shield, label: "Utilisateurs", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
     { href: "/unites", icon: Shield, label: "Unités", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
     { href: "/missions", icon: Shield, label: "Missions", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },

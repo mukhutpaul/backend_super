@@ -1,0 +1,87 @@
+import { api } from "@/lib/axios";
+
+/* ========================= TYPES ========================= */
+
+export type Policier = {
+    id: string;
+    matricule: string;
+    nom: string;
+    postnom: string;
+    prenom: string;
+    sexe?: string;
+};
+
+export type Controle = {
+    id: string;
+    uid?: string;
+
+    policier?: Policier;
+
+    matricule?: string;
+    unite?: string;
+    grade?: string;
+
+    present?: boolean;
+    justifie?: boolean;
+
+    situation?: string;
+    status?: string;
+
+    isActif?: boolean;
+    createdAt?: string;
+};
+
+/* ========================= PAGINATION RESPONSE ========================= */
+
+
+
+export type PageResponse<T> = {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+};
+
+export const getControles = async (params: {
+    page: number;
+    size: number;
+    search?: string;
+    unite?: string;
+}) => {
+    const res = await api.get<PageResponse<Controle>>("/controles", {
+        params: {
+            page: params.page,
+            size: params.size,
+            search: params.search ?? "",
+            unite: params.unite ?? "",
+        },
+    });
+
+    return res.data;
+};
+/* ========================= GET BY ID ========================= */
+
+export const getControleById = async (id: string) => {
+    const res = await api.get<Controle>(`/controles/${id}`);
+    return res.data;
+};
+
+/* ========================= CREATE ========================= */
+
+export const createControle = async (data: Partial<Controle>) => {
+    const res = await api.post("/controles", data);
+    return res.data;
+};
+
+/* ========================= UPDATE ========================= */
+
+export const updateControle = async (id: string, data: Partial<Controle>) => {
+    const res = await api.put(`/controles/${id}`, data);
+    return res.data;
+};
+
+/* ========================= DELETE ========================= */
+
+export const deleteControle = async (id: string) => {
+    const res = await api.delete(`/controles/${id}`);
+    return res.data;
+};
