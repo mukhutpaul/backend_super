@@ -6,6 +6,8 @@ import Select from "react-select";
 import { Search, Printer } from "lucide-react";
 import { toast } from "react-toastify";
 import { QRCodeCanvas } from "qrcode.react";
+import jsPDF from "jspdf";
+import QRCode from "qrcode";
 
 import { Controle, getControles } from "@/services/controle.service";
 import { getUnites } from "@/services/unite.service";
@@ -86,6 +88,84 @@ export default function ControlePage() {
 
     /* ========================= LOAD ========================= */
 
+    const handlePrintPDF = async (c: Controle) => {
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: [74, 105], // A8
+        });
+
+        const p = c.policier;
+
+        // ================= HEADER =================
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("CONTRÔLE PNC", 37, 10, { align: "center" });
+
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.text("Police Nationale Congolaise", 37, 14, { align: "center" });
+
+        doc.line(5, 16, 69, 16);
+
+        // ================= IDENTITÉ =================
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text("IDENTITE", 5, 22);
+
+        doc.setFont("helvetica", "normal");
+        doc.text(`Nom     : ${p?.nom ?? "-"}`, 5, 28);
+        doc.text(`Postnom : ${p?.postnom ?? "-"}`, 5, 33);
+        doc.text(`Prenom  : ${p?.prenom ?? "-"}`, 5, 38);
+
+        // ================= INFOS =================
+        doc.setFont("helvetica", "bold");
+        doc.text("CONTROLE", 5, 47);
+
+        doc.setFont("helvetica", "normal");
+        doc.text(`Matricule : ${c.matricule}`, 5, 53);
+        doc.text(`Grade     : ${c.grade}`, 5, 58);
+        doc.text(`Unité     : ${c.unite}`, 5, 63);
+
+        // ================= QR CODE =================
+        const qrData = await QRCode.toDataURL(JSON.stringify(c));
+        doc.addImage(qrData, "PNG", 48, 25, 22, 22);
+
+        // ================= STATUS =================
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(c.present ? 0 : 180, c.present ? 120 : 0, 0);
+
+        doc.text(
+            c.present ? "PRESENT" : "ABSENT",
+            37,
+            75,
+            { align: "center" }
+        );
+
+        doc.setTextColor(0, 0, 0);
+
+        // ================= FOOTER =================
+        doc.setFontSize(6);
+        doc.setFont("helvetica", "italic");
+        doc.text("PNC - Document officiel de contrôle", 37, 100, {
+            align: "center",
+        });
+
+        // ================= PRINT DIRECT (NO DOWNLOAD) =================
+        const pdfBlobUrl = doc.output("bloburl");
+
+        const printWindow = window.open(pdfBlobUrl);
+
+        if (printWindow) {
+            printWindow.onload = () => {
+                printWindow.focus();
+                printWindow.print();
+            };
+        } else {
+            toast.error("Impossible d'ouvrir la fenêtre d'impression");
+        }
+    };
     const loadData = async () => {
         try {
             setLoading(true);
@@ -282,10 +362,10 @@ export default function ControlePage() {
                         {/* HEADER */}
                         <div className="text-center border-b pb-3">
                             <h2 className="text-lg font-bold uppercase">
-                                Carte de Contrôle
+                                Pnc-Contrôle
                             </h2>
                             <p className="text-xs opacity-60">
-                                Police Nationale
+                                Police Nationale Congolaise
                             </p>
                         </div>
 
@@ -347,9 +427,9 @@ export default function ControlePage() {
 
                             <button
                                 className="btn btn-sm btn-primary w-1/2 ml-2"
-                                onClick={() => window.print()}
+                                onClick={() => handlePrintPDF(selectedControle)}
                             >
-                                Imprimer
+                                Imprimer PDF
                             </button>
 
                         </div>
