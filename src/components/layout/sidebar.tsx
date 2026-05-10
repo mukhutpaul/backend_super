@@ -39,7 +39,8 @@ export default function Sidebar({
     { href: "/unites", icon: Shield, label: "Unités", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
     { href: "/missions", icon: Shield, label: "Missions", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
     { href: "/seances", icon: Shield, label: "Séances", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
-    { href: "/equipes", icon: Shield, label: "Equipes", auth: true, roles: ["SUPERVISEUR", "ADMIN"] }
+    { href: "/equipes", icon: Shield, label: "Equipes", auth: true, roles: ["SUPERVISEUR", "ADMIN"] },
+    { href: "/recherches", icon: Shield, label: "Recherches", auth: true, roles: ["SUPERVISEUR", "ADMIN"] }
 
   ]
 

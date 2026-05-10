@@ -58,6 +58,26 @@ export const getControles = async (params: {
 
     return res.data;
 };
+
+/* ========================= SEARCH BY IDENTITE ========================= */
+
+export const searchControleByIdentite = async (params: {
+    nom?: string;
+    postnom?: string;
+    prenom?: string;
+    dateNaissance?: string; // format attendu: yyyy-MM-dd
+}) => {
+    const res = await api.get<Controle[]>("/controles/search/identite", {
+        params: {
+            nom: params.nom ?? "",
+            postnom: params.postnom ?? "",
+            prenom: params.prenom ?? "",
+            dateNaissance: params.dateNaissance ?? "",
+        },
+    });
+
+    return res.data;
+};
 /* ========================= GET BY ID ========================= */
 
 export const getControleById = async (id: string) => {
