@@ -478,20 +478,20 @@ export default function EquipesPage() {
                                                 <td className="flex gap-2">
 
                                                     <button
-                                                        className="btn btn-xs btn-info"
+                                                        className="btn btn-xs btn-info btn-outline"
                                                         onClick={() => handleEditOpen(e)}
                                                     >
                                                         <Pencil size={14} />
                                                     </button>
 
                                                     <button
-                                                        className="btn btn-xs btn-error"
+                                                        className="btn btn-xs btn-error btn-outline"
                                                         onClick={() => handleDelete(e.id)}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
                                                     <button
-                                                        className="btn btn-xs btn-success"
+                                                        className="btn btn-xs btn-success btn-outline"
                                                         onClick={async () => {
                                                             setSelectedEquipe(e);
 
@@ -580,101 +580,218 @@ export default function EquipesPage() {
                 )}
 
             </div>
-            {openViewUnits && selectedEquipe && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        
+        {openViewUnits && selectedEquipe && (
 
-                    <div className="bg-base-100 w-full max-w-2xl rounded-xl shadow-xl p-6">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
 
-                        {/* HEADER */}
-                        <div className="flex justify-between items-center mb-5 border-b pb-3">
+        <div className="bg-base-100 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-base-300">
 
-                            <h2 className="text-xl font-bold">
-                                Liste des unités affectées à cette équipe
-                            </h2>
+            {/* HEADER */}
+            <div className="bg-base-200 border-b border-base-300 px-5 py-4">
 
-                            <button
-                                className="btn btn-sm btn-circle"
-                                onClick={() => setOpenViewUnits(false)}
-                            >
-                                ✕
-                            </button>
+                <div className="flex items-center justify-between">
 
-                        </div>
+                    <div>
 
-                        {/* CONTENT */}
-                        <div className="space-y-3">
+                        <h2 className="text-xl font-bold text-base-content">
+                            Unités affectées
+                        </h2>
 
-                            <div className="p-3 bg-base-200 rounded-lg">
-                                <p className="font-semibold">
-                                    Équipe :
-                                </p>
+                        <p className="text-xs opacity-60 mt-1">
+                            Équipe #{selectedEquipe.id}
+                        </p>
 
-                                <p>
-                                    Equipe-{selectedEquipe.user?.username}
-                                </p>
-                            </div>
+                    </div>
 
-                            <div className="p-3 bg-base-200 rounded-lg">
-                                <p className="font-semibold">
-                                    Mission :
-                                </p>
+                    <button
+                        className="btn btn-sm btn-circle btn-ghost"
+                        onClick={() => setOpenViewUnits(false)}
+                    >
+                        ✕
+                    </button>
 
-                                <p>
-                                    {selectedEquipe.mission?.numero}
-                                </p>
-                            </div>
+                </div>
 
-                            {/* PLACEHOLDER UNITES */}
-                            <div className="mt-4">
+            </div>
 
-                                <p className="font-semibold mb-2">
-                                    Unités affectées :
-                                </p>
+            {/* View unité équipe */}
+            <div className="p-5 space-y-4">
 
-                                <div className="p-4 border rounded-lg text-sm opacity-70">
+                {/* INFOS */}
+                <div className="grid grid-cols-2 gap-3">
 
-                                    {/* ici tu brancheras API plus tard */}
-                                    {loadingUnites ? (
-                                        <div className="flex justify-center py-6">
-                                            <span className="loading loading-spinner"></span>
-                                        </div>
-                                    ) : unitesEquipe.length === 0 ? (
-                                        <div className="p-4 border rounded-lg text-sm opacity-70">
-                                            Aucune unité affectée à cette équipe
-                                        </div>
-                                    ) : (
-                                        <div className="max-h-80 overflow-y-auto pr-2 space-y-2">
+                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
 
-                                            {unitesEquipe.map((u: any) => (
-                                                <div
-                                                    key={u.id}
-                                                    className="flex justify-between items-center p-3 bg-base-200 rounded-lg"
-                                                >
-                                                    <div>
-                                                        <p className="font-semibold">{u.name}</p>
+                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                            Équipe
+                        </p>
 
-                                                        {u.commandant && (
-                                                            <p className="text-xs opacity-70">
-                                                                Cmdt: {u.commandant.name}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
+                        <p className="font-semibold text-sm">
+                            Equipe-{selectedEquipe.user?.username}
+                        </p>
 
-                                        </div>
-                                    )}
+                    </div>
 
-                                </div>
+                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
 
-                            </div>
+                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                            Mission
+                        </p>
 
-                        </div>
+                        <p className="font-semibold text-sm">
+                            {selectedEquipe.mission?.numero}
+                        </p>
 
                     </div>
 
                 </div>
-            )}
+
+                {/* TITLE */}
+                <div className="flex items-center justify-between">
+
+                    <div>
+
+                        <h3 className="font-semibold text-sm">
+                            Liste des unités
+                        </h3>
+
+                        <p className="text-xs opacity-60">
+                            {unitesEquipe.length} unité(s)
+                        </p>
+
+                    </div>
+
+                    <div className="badge badge-primary badge-sm">
+                        Active
+                    </div>
+
+                </div>
+
+                {/* LOADING */}
+                {loadingUnites ? (
+
+                    <div className="flex flex-col items-center justify-center py-10">
+
+                        <span className="loading loading-spinner loading-md text-primary"></span>
+
+                        <p className="mt-3 text-xs opacity-70">
+                            Chargement...
+                        </p>
+
+                    </div>
+
+                ) : unitesEquipe.length === 0 ? (
+
+                    /* EMPTY */
+                    <div className="border border-dashed border-base-300 rounded-xl py-10 flex flex-col items-center justify-center text-center">
+
+                        <Inbox className="w-7 h-7 opacity-40 mb-2" />
+
+                        <p className="font-medium text-sm">
+                            Aucune unité affectée
+                        </p>
+
+                        <p className="text-xs opacity-60 mt-1">
+                            Cette équipe ne contient aucune unité.
+                        </p>
+
+                    </div>
+
+                ) : (
+
+                    /* LIST */
+                    <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2">
+
+                        {unitesEquipe.map((u: any) => (
+
+                            <div
+                                key={u.id}
+                                className="
+                                    bg-base-200
+                                    hover:bg-base-300
+                                    transition-all
+                                    rounded-xl
+                                    px-4
+                                    py-3
+                                    border
+                                    border-base-300
+                                    flex
+                                    items-center
+                                    justify-between
+                                "
+                            >
+
+                                <div className="flex items-center gap-3">
+
+                                    {/* ICON */}
+                                    <div className="
+                                        w-10 h-10 rounded-xl
+                                        bg-primary/10
+                                        text-primary
+                                        flex items-center justify-center
+                                        font-bold text-sm
+                                    ">
+                                        {u.name?.charAt(0)}
+                                    </div>
+
+                                    {/* INFOS */}
+                                    <div>
+
+                                        <p className="font-semibold text-sm">
+                                            {u.name}
+                                        </p>
+
+                                        {u.commandant ? (
+
+                                            <p className="text-xs opacity-70">
+                                                Cmdt: {u.commandant.name}
+                                            </p>
+
+                                        ) : (
+
+                                            <p className="text-xs opacity-50">
+                                                Aucun commandant
+                                            </p>
+
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+                                {/* BADGE */}
+                                <div className="badge badge-success badge-sm">
+                                    Active
+                                </div>
+
+                            </div>
+
+                        ))}
+
+                    </div>
+
+                )}
+
+            </div>
+
+            {/* FOOTER */}
+            <div className="border-t border-base-300 bg-base-200 px-5 py-3 flex justify-end">
+
+                <button
+                    className="btn btn-sm btn-primary px-6"
+                    onClick={() => setOpenViewUnits(false)}
+                >
+                    Fermer
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+)}
         </DashboardLayout>
     );
 }

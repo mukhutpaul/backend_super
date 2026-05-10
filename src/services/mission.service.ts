@@ -37,6 +37,14 @@ export const getMissions = async (): Promise<Mission[]> => {
     return res.data;
 };
 
+export const getUnitesByMission = async (missionId: number) => {
+
+    const res = await api.get(
+        `/mission-unites/${missionId}/unites`
+    );
+
+    return res.data;
+};
 /**
  * CREATE
  */
