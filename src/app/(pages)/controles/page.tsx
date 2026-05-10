@@ -298,16 +298,14 @@ export default function ControlePage() {
                                             <td>{c.status}</td>
 
                                             <td>
-                                                <td>
-                                                    {c.present && (
-                                                        <button
-                                                            className="btn btn-sm btn-primary"
-                                                            onClick={() => setSelectedControle(c)}
-                                                        >
-                                                            <Printer size={16} />
-                                                        </button>
-                                                    )}
-                                                </td>
+                                                {c.present && (
+                                                    <button
+                                                        className="btn btn-sm btn-primary    btn-ou"
+                                                        onClick={() => setSelectedControle(c)}
+                                                    >
+                                                        <Printer size={16} />
+                                                    </button>
+                                                )}
                                             </td>
 
                                         </tr>
