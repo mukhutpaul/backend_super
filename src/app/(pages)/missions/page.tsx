@@ -426,26 +426,31 @@ export default function MissionsPage() {
                                                     </button>
                                                 )}
 
-                                                <button
-                                                    className="btn btn-xs btn-error btn-outline"
-                                                    onClick={() => handleDelete(m.id)}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
+                                                <div className="tooltip" data-tip="Supprimer la mission">
 
-                                                <button
-                                                    className="btn btn-xs btn-info btn-outline"
-                                                    onClick={async () => {
+                                                    <button
+                                                        className="btn btn-xs btn-error btn-outline"
+                                                        onClick={() => handleDelete(m.id)}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
 
-                                                        setSelectedMission(m);
+                                                </div>
 
-                                                        await fetchUnitesMission(m.id);
+                                                <div className="tooltip" data-tip="Voir unités de la mission">
 
-                                                        setOpenViewUnits(true);
-                                                    }}
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
+                                                    <button
+                                                        className="btn btn-xs btn-info btn-outline"
+                                                        onClick={async () => {
+                                                            setSelectedMission(m);
+                                                            await fetchUnitesMission(m.id);
+                                                            setOpenViewUnits(true);
+                                                        }}
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
+
+                                                </div>
 
                                             </td>
                                         </tr>

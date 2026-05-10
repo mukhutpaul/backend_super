@@ -477,31 +477,39 @@ export default function EquipesPage() {
 
                                                 <td className="flex gap-2">
 
-                                                    <button
-                                                        className="btn btn-xs btn-info btn-outline"
-                                                        onClick={() => handleEditOpen(e)}
-                                                    >
-                                                        <Pencil size={14} />
-                                                    </button>
+                                                    {/* EDIT */}
+                                                    <div className="tooltip" data-tip="Modifier l'équipe">
+                                                        <button
+                                                            className="btn btn-xs btn-info btn-outline"
+                                                            onClick={() => handleEditOpen(e)}
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                    </div>
 
-                                                    <button
-                                                        className="btn btn-xs btn-error btn-outline"
-                                                        onClick={() => handleDelete(e.id)}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-xs btn-success btn-outline"
-                                                        onClick={async () => {
-                                                            setSelectedEquipe(e);
+                                                    {/* DELETE */}
+                                                    <div className="tooltip" data-tip="Supprimer l'équipe">
+                                                        <button
+                                                            className="btn btn-xs btn-error btn-outline"
+                                                            onClick={() => handleDelete(e.id)}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
 
-                                                            await fetchUnitesEquipe(e.id);
-
-                                                            setOpenViewUnits(true);
-                                                        }}
-                                                    >
-                                                        <Eye size={14} />
-                                                    </button>
+                                                    {/* VIEW */}
+                                                    <div className="tooltip" data-tip="Voir les unités de l'équipe">
+                                                        <button
+                                                            className="btn btn-xs btn-success btn-outline"
+                                                            onClick={async () => {
+                                                                setSelectedEquipe(e);
+                                                                await fetchUnitesEquipe(e.id);
+                                                                setOpenViewUnits(true);
+                                                            }}
+                                                        >
+                                                            <Eye size={14} />
+                                                        </button>
+                                                    </div>
 
                                                 </td>
 
@@ -580,134 +588,134 @@ export default function EquipesPage() {
                 )}
 
             </div>
-        
-        {openViewUnits && selectedEquipe && (
 
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            {openViewUnits && selectedEquipe && (
 
-        <div className="bg-base-100 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-base-300">
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
 
-            {/* HEADER */}
-            <div className="bg-base-200 border-b border-base-300 px-5 py-4">
+                    <div className="bg-base-100 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-base-300">
 
-                <div className="flex items-center justify-between">
+                        {/* HEADER */}
+                        <div className="bg-base-200 border-b border-base-300 px-5 py-4">
 
-                    <div>
+                            <div className="flex items-center justify-between">
 
-                        <h2 className="text-xl font-bold text-base-content">
-                            Unités affectées
-                        </h2>
+                                <div>
 
-                        <p className="text-xs opacity-60 mt-1">
-                            Équipe #{selectedEquipe.id}
-                        </p>
+                                    <h2 className="text-xl font-bold text-base-content">
+                                        Unités affectées
+                                    </h2>
 
-                    </div>
+                                    <p className="text-xs opacity-60 mt-1">
+                                        Équipe #{selectedEquipe.id}
+                                    </p>
 
-                    <button
-                        className="btn btn-sm btn-circle btn-ghost"
-                        onClick={() => setOpenViewUnits(false)}
-                    >
-                        ✕
-                    </button>
+                                </div>
 
-                </div>
+                                <button
+                                    className="btn btn-sm btn-circle btn-ghost"
+                                    onClick={() => setOpenViewUnits(false)}
+                                >
+                                    ✕
+                                </button>
 
-            </div>
+                            </div>
 
-            {/* View unité équipe */}
-            <div className="p-5 space-y-4">
+                        </div>
 
-                {/* INFOS */}
-                <div className="grid grid-cols-2 gap-3">
+                        {/* View unité équipe */}
+                        <div className="p-5 space-y-4">
 
-                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                            {/* INFOS */}
+                            <div className="grid grid-cols-2 gap-3">
 
-                        <p className="text-[11px] uppercase opacity-50 mb-1">
-                            Équipe
-                        </p>
+                                <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
 
-                        <p className="font-semibold text-sm">
-                            Equipe-{selectedEquipe.user?.username}
-                        </p>
+                                    <p className="text-[11px] uppercase opacity-50 mb-1">
+                                        Équipe
+                                    </p>
 
-                    </div>
+                                    <p className="font-semibold text-sm">
+                                        Equipe-{selectedEquipe.user?.username}
+                                    </p>
 
-                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                                </div>
 
-                        <p className="text-[11px] uppercase opacity-50 mb-1">
-                            Mission
-                        </p>
+                                <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
 
-                        <p className="font-semibold text-sm">
-                            {selectedEquipe.mission?.numero}
-                        </p>
+                                    <p className="text-[11px] uppercase opacity-50 mb-1">
+                                        Mission
+                                    </p>
 
-                    </div>
+                                    <p className="font-semibold text-sm">
+                                        {selectedEquipe.mission?.numero}
+                                    </p>
 
-                </div>
+                                </div>
 
-                {/* TITLE */}
-                <div className="flex items-center justify-between">
+                            </div>
 
-                    <div>
+                            {/* TITLE */}
+                            <div className="flex items-center justify-between">
 
-                        <h3 className="font-semibold text-sm">
-                            Liste des unités
-                        </h3>
+                                <div>
 
-                        <p className="text-xs opacity-60">
-                            {unitesEquipe.length} unité(s)
-                        </p>
+                                    <h3 className="font-semibold text-sm">
+                                        Liste des unités
+                                    </h3>
 
-                    </div>
+                                    <p className="text-xs opacity-60">
+                                        {unitesEquipe.length} unité(s)
+                                    </p>
 
-                    <div className="badge badge-primary badge-sm">
-                        Active
-                    </div>
+                                </div>
 
-                </div>
+                                <div className="badge badge-primary badge-sm">
+                                    Active
+                                </div>
 
-                {/* LOADING */}
-                {loadingUnites ? (
+                            </div>
 
-                    <div className="flex flex-col items-center justify-center py-10">
+                            {/* LOADING */}
+                            {loadingUnites ? (
 
-                        <span className="loading loading-spinner loading-md text-primary"></span>
+                                <div className="flex flex-col items-center justify-center py-10">
 
-                        <p className="mt-3 text-xs opacity-70">
-                            Chargement...
-                        </p>
+                                    <span className="loading loading-spinner loading-md text-primary"></span>
 
-                    </div>
+                                    <p className="mt-3 text-xs opacity-70">
+                                        Chargement...
+                                    </p>
 
-                ) : unitesEquipe.length === 0 ? (
+                                </div>
 
-                    /* EMPTY */
-                    <div className="border border-dashed border-base-300 rounded-xl py-10 flex flex-col items-center justify-center text-center">
+                            ) : unitesEquipe.length === 0 ? (
 
-                        <Inbox className="w-7 h-7 opacity-40 mb-2" />
+                                /* EMPTY */
+                                <div className="border border-dashed border-base-300 rounded-xl py-10 flex flex-col items-center justify-center text-center">
 
-                        <p className="font-medium text-sm">
-                            Aucune unité affectée
-                        </p>
+                                    <Inbox className="w-7 h-7 opacity-40 mb-2" />
 
-                        <p className="text-xs opacity-60 mt-1">
-                            Cette équipe ne contient aucune unité.
-                        </p>
+                                    <p className="font-medium text-sm">
+                                        Aucune unité affectée
+                                    </p>
 
-                    </div>
+                                    <p className="text-xs opacity-60 mt-1">
+                                        Cette équipe ne contient aucune unité.
+                                    </p>
 
-                ) : (
+                                </div>
 
-                    /* LIST */
-                    <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2">
+                            ) : (
 
-                        {unitesEquipe.map((u: any) => (
+                                /* LIST */
+                                <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2">
 
-                            <div
-                                key={u.id}
-                                className="
+                                    {unitesEquipe.map((u: any) => (
+
+                                        <div
+                                            key={u.id}
+                                            className="
                                     bg-base-200
                                     hover:bg-base-300
                                     transition-all
@@ -720,78 +728,78 @@ export default function EquipesPage() {
                                     items-center
                                     justify-between
                                 "
-                            >
+                                        >
 
-                                <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3">
 
-                                    {/* ICON */}
-                                    <div className="
+                                                {/* ICON */}
+                                                <div className="
                                         w-10 h-10 rounded-xl
                                         bg-primary/10
                                         text-primary
                                         flex items-center justify-center
                                         font-bold text-sm
                                     ">
-                                        {u.name?.charAt(0)}
-                                    </div>
+                                                    {u.name?.charAt(0)}
+                                                </div>
 
-                                    {/* INFOS */}
-                                    <div>
+                                                {/* INFOS */}
+                                                <div>
 
-                                        <p className="font-semibold text-sm">
-                                            {u.name}
-                                        </p>
+                                                    <p className="font-semibold text-sm">
+                                                        {u.name}
+                                                    </p>
 
-                                        {u.commandant ? (
+                                                    {u.commandant ? (
 
-                                            <p className="text-xs opacity-70">
-                                                Cmdt: {u.commandant.name}
-                                            </p>
+                                                        <p className="text-xs opacity-70">
+                                                            Cmdt: {u.commandant.name}
+                                                        </p>
 
-                                        ) : (
+                                                    ) : (
 
-                                            <p className="text-xs opacity-50">
-                                                Aucun commandant
-                                            </p>
+                                                        <p className="text-xs opacity-50">
+                                                            Aucun commandant
+                                                        </p>
 
-                                        )}
+                                                    )}
 
-                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            {/* BADGE */}
+                                            <div className="badge badge-success badge-sm">
+                                                Active
+                                            </div>
+
+                                        </div>
+
+                                    ))}
 
                                 </div>
 
-                                {/* BADGE */}
-                                <div className="badge badge-success badge-sm">
-                                    Active
-                                </div>
+                            )}
 
-                            </div>
+                        </div>
 
-                        ))}
+                        {/* FOOTER */}
+                        <div className="border-t border-base-300 bg-base-200 px-5 py-3 flex justify-end">
+
+                            <button
+                                className="btn btn-sm btn-primary px-6"
+                                onClick={() => setOpenViewUnits(false)}
+                            >
+                                Fermer
+                            </button>
+
+                        </div>
 
                     </div>
 
-                )}
+                </div>
 
-            </div>
-
-            {/* FOOTER */}
-            <div className="border-t border-base-300 bg-base-200 px-5 py-3 flex justify-end">
-
-                <button
-                    className="btn btn-sm btn-primary px-6"
-                    onClick={() => setOpenViewUnits(false)}
-                >
-                    Fermer
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-)}
+            )}
         </DashboardLayout>
     );
 }
