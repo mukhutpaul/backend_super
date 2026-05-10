@@ -18,7 +18,7 @@ import Select from "react-select";
 
 
 import Swal from "sweetalert2";
-import { updateUser, deleteUser } from "@/services/auth.service";
+import { updateUser, deleteUser, getUnitesByUser } from "@/services/auth.service";
 
 import {
     createUser,
@@ -29,6 +29,7 @@ import { getProfiles } from "@/services/profile.service";
 
 import { toast } from "react-toastify";
 import EmptyState from "@/components/EmptyState";
+
 
 type Profile = {
     id: number;
@@ -131,6 +132,14 @@ export default function UsersPage() {
     const [editModal, setEditModal] = useState(false);
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [viewModal, setViewModal] = useState(false);
+    const [openUnits, setOpenUnits] = useState(false);
+    const [selectedUnits, setSelectedUnits] = useState<any[]>([]);
+    const [loadingUnits, setLoadingUnits] = useState(false);
+    const [openViewUser, setOpenViewUser] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [unitesUser, setUnitesUser] = useState<any[]>([]);
+    const [loadingUnites, setLoadingUnites] = useState(false);
 
     /**
      * 🔥 MODAL
@@ -151,7 +160,6 @@ export default function UsersPage() {
         resolver: zodResolver(createUserSchema),
     });
 
-
     /**
      * UPDATE FORM (IMPORTANT FIX)
      */
@@ -160,6 +168,7 @@ export default function UsersPage() {
         handleSubmit: handleSubmitEdit,
         setValue: setValueEdit,
         reset: resetEdit,
+        watch: watchEdit,
         formState: { errors: errorsEdit },
     } = useForm<UpdateUserForm>({
         resolver: zodResolver(updateUserSchema),
@@ -278,6 +287,28 @@ export default function UsersPage() {
         }
     };
 
+    const handleViewUser = async (user: User) => {
+
+        setSelectedUser(user);
+        setOpenViewUser(true);
+        setLoadingUnites(true);
+
+        try {
+
+            const data = await getUnitesByUser(user.id);
+
+            setUnitesUser(data);
+
+        } catch (error) {
+
+            console.error(error);
+            setUnitesUser([]);
+
+        } finally {
+
+            setLoadingUnites(false);
+        }
+    };
     const handleDeleteUser = async (id: number) => {
         const result = await Swal.fire({
             title: "Supprimer cet utilisateur ?",
@@ -504,23 +535,19 @@ export default function UsersPage() {
                             <table className="table">
 
                                 <thead className="bg-base-200">
-
                                     <tr>
                                         <th>ID</th>
                                         <th>Username</th>
                                         <th>Noms</th>
                                         <th>Email</th>
                                         <th>Profil</th>
-                                        <th className="text-center">
-                                            Actions
-                                        </th>
+                                        <th className="text-center">Actions</th>
                                     </tr>
-
                                 </thead>
 
                                 <tbody>
 
-                                    {/* ⏳ LOADING */}
+                                    {/* LOADING */}
                                     {loading && (
                                         <tr>
                                             <td colSpan={6} className="text-center py-10">
@@ -529,13 +556,12 @@ export default function UsersPage() {
                                         </tr>
                                     )}
 
-                                    {/* 📭 EMPTY STATE */}
+                                    {/* EMPTY */}
                                     {!loading && paginatedData.length === 0 && (
                                         <tr>
                                             <td colSpan={6} className="text-center py-12">
 
                                                 <div className="flex flex-col items-center gap-2 opacity-70">
-
                                                     <Search className="w-8 h-8" />
 
                                                     <p className="font-semibold">
@@ -545,54 +571,75 @@ export default function UsersPage() {
                                                     <p className="text-sm">
                                                         Essayez de modifier vos filtres ou d’ajouter un utilisateur
                                                     </p>
-
                                                 </div>
-                                            </td>
 
+                                            </td>
                                         </tr>
                                     )}
 
-                                    {/* 📄 DATA */}
-                                    {!loading &&
-                                        paginatedData.map((u) => (
-                                            <tr key={u.id} className="hover">
+                                    {/* DATA */}
+                                    {!loading && paginatedData.map((u) => (
+                                        <tr key={u.id} className="hover">
 
-                                                <td>{u.id}</td>
-                                                <td className="font-semibold">{u.username}</td>
-                                                <td>{u.noms}</td>
-                                                <td>{u.email}</td>
+                                            <td>{u.id}</td>
+                                            <td className="font-semibold">{u.username}</td>
+                                            <td>{u.noms}</td>
+                                            <td>{u.email}</td>
 
-                                                <td>
-                                                    <span className="badge badge-info">
-                                                        {u.profile?.name}
-                                                    </span>
-                                                </td>
+                                            <td>
+                                                <span className="badge badge-info">
+                                                    {u.profile?.name}
+                                                </span>
+                                            </td>
 
-                                                <td className="text-center">
-                                                    <div className="flex justify-center gap-2">
+                                            <td className="text-center">
 
-                                                        <button className="btn btn-ghost btn-xs">
-                                                            <Eye className="w-4 h-4" />
-                                                        </button>
+                                                <div className="flex items-center justify-center gap-2">
 
-                                                        <button className="btn btn-ghost btn-xs"
+                                                    {/* VIEW CONTROLEUR ONLY */}
+                                                    {u.profile?.name === "CONTROLEUR" && (
+                                                        <div className="tooltip" data-tip="Voir unités">
+
+                                                            <button
+                                                                className="w-8 h-8 flex btn-success btn-outline items-center justify-center rounded-full bg-base-200 hover:bg-primary hover:text-primary-content transition-all cursor-pointer"
+                                                                onClick={() => handleViewUser(u)}
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </button>
+
+                                                        </div>
+                                                    )}
+
+                                                    {/* EDIT */}
+                                                    <div className="tooltip" data-tip="Modifier">
+
+                                                        <button
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full bg-base-200 hover:bg-warning hover:text-warning-content transition-all cursor-pointer"
                                                             onClick={() => openEditModal(u)}
                                                         >
                                                             <Pencil className="w-4 h-4" />
                                                         </button>
 
-                                                        <button className="btn btn-ghost btn-xs text-error"
-                                                            onClick={() => handleDeleteUser(u.id)}
+                                                    </div>
 
+                                                    {/* DELETE */}
+                                                    <div className="tooltip" data-tip="Supprimer">
+
+                                                        <button
+                                                            className="w-8 h-8 flex btn-error btn-outline items-center justify-center rounded-full bg-base-200 hover:bg-error hover:text-error-content transition-all cursor-pointer"
+                                                            onClick={() => handleDeleteUser(u.id)}
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
 
                                                     </div>
-                                                </td>
 
-                                            </tr>
-                                        ))}
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+                                    ))}
 
                                 </tbody>
 
@@ -603,10 +650,6 @@ export default function UsersPage() {
                     </div>
 
                 </div>
-
-                {/* 📄 PAGINATION */}
-
-
                 <div className="flex justify-between items-center">
 
                     <p className="text-sm opacity-70">
@@ -636,331 +679,559 @@ export default function UsersPage() {
                     </div>
 
                 </div>
-
             </div>
 
-            {/* 🔥 MODAL */}
-            {openModal && (
+            {/* 📄 PAGINATION */}
 
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
 
-                    <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200">
 
-                        {/* HEADER */}
-                        <div className="flex items-center justify-between border-b border-base-300 p-5">
 
-                            <div>
 
-                                <h2 className="text-xl font-bold">
-                                    Ajouter utilisateur
-                                </h2>
 
-                                <p className="text-sm opacity-60">
-                                    Création d'un nouveau compte
-                                </p>
+            {/* VIEW USER DETAILS */}
+            {
+                openViewUser && selectedUser && (
 
-                            </div>
+                    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
 
-                            <button
-                                className="btn btn-sm btn-circle btn-ghost"
-                                onClick={() =>
-                                    setOpenModal(false)
-                                }
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                        <div className="bg-base-100 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-base-300">
 
-                        </div>
+                            {/* HEADER (UNIFIÉ MISSION / ÉQUIPE STYLE) */}
+                            <div className="bg-base-200 border-b border-base-300 px-5 py-4">
 
-                        {/* BODY */}
-                        <form
-                            onSubmit={handleSubmit(
-                                handleCreateUser
-                            )}
-                            className="p-5 space-y-4"
-                            autoComplete="off"
-                        >
+                                <div className="flex items-center justify-between">
 
-                            {/* USERNAME */}
-                            <div>
+                                    <div>
 
-                                <input
-                                    type="text"
-                                    placeholder="Username"
-                                    autoComplete="off"
-                                    className="input input-bordered w-full"
-                                    {...register("username")}
+                                        <h2 className="text-xl font-bold text-base-content">
+                                            Détails utilisateur
+                                        </h2>
 
-                                />
+                                        <p className="text-xs opacity-60 mt-1">
+                                            @{selectedUser.username}
+                                        </p>
 
-                                {errors.username && (
-                                    <p className="text-error text-sm mt-1">
-                                        {errors.username.message}
-                                    </p>
-                                )}
+                                    </div>
+
+                                    <button
+                                        className="btn btn-sm btn-circle btn-ghost"
+                                        onClick={() => setOpenViewUser(false)}
+                                    >
+                                        ✕
+                                    </button>
+
+                                </div>
 
                             </div>
 
-                            {/* NOMS */}
-                            <div>
+                            {/* CONTENT */}
+                            <div className="p-5 space-y-4">
 
-                                <input
-                                    type="text"
-                                    placeholder="Noms"
-                                    className="input input-bordered w-full"
-                                    {...register("noms")}
-                                />
+                                {/* INFOS USER */}
+                                <div className="grid grid-cols-2 gap-3">
 
-                                {errors.noms && (
-                                    <p className="text-error text-sm mt-1">
-                                        {errors.noms.message}
-                                    </p>
+                                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                                            Nom complet
+                                        </p>
+                                        <p className="font-semibold text-sm">
+                                            {selectedUser.noms}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                                            Email
+                                        </p>
+                                        <p className="font-semibold text-sm">
+                                            {selectedUser.email}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                                            Profil
+                                        </p>
+                                        <p className="font-semibold text-sm">
+                                            {selectedUser.profile?.name}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-base-200 rounded-xl px-4 py-3 border border-base-300">
+                                        <p className="text-[11px] uppercase opacity-50 mb-1">
+                                            Statut
+                                        </p>
+                                        <span className="badge badge-success">
+                                            Actif
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                                {/* UNITES TITLE */}
+                                <div className="flex items-center justify-between">
+
+                                    <div>
+
+                                        <h3 className="font-semibold text-sm">
+                                            Unités liées
+                                        </h3>
+
+                                        <p className="text-xs opacity-60">
+                                            {unitesUser.length} unité(s)
+                                        </p>
+
+                                    </div>
+
+                                    <div className="badge badge-primary badge-sm">
+                                        Contrôleur
+                                    </div>
+
+                                </div>
+
+                                {/* LOADING */}
+                                {loadingUnites ? (
+
+                                    <div className="flex flex-col items-center justify-center py-10">
+
+                                        <span className="loading loading-spinner loading-md text-primary"></span>
+
+                                        <p className="mt-3 text-xs opacity-70">
+                                            Chargement...
+                                        </p>
+
+                                    </div>
+
+                                ) : unitesUser.length === 0 ? (
+
+                                    /* EMPTY */
+                                    <div className="border border-dashed border-base-300 rounded-xl py-10 flex flex-col items-center justify-center text-center">
+
+                                        <Inbox className="w-7 h-7 opacity-40 mb-2" />
+
+                                        <p className="font-medium text-sm">
+                                            Aucune unité liée
+                                        </p>
+
+                                        <p className="text-xs opacity-60 mt-1">
+                                            Ce contrôleur n’est affecté à aucune unité.
+                                        </p>
+
+                                    </div>
+
+                                ) : (
+
+                                    /* LIST */
+                                    <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2">
+
+                                        {unitesUser.map((u: any) => (
+
+                                            <div
+                                                key={u.id}
+                                                className="
+                                    bg-base-200
+                                    hover:bg-base-300
+                                    transition-all
+                                    rounded-xl
+                                    px-4
+                                    py-3
+                                    border
+                                    border-base-300
+                                    flex
+                                    items-center
+                                    justify-between
+                                "
+                                            >
+
+                                                <div className="flex items-center gap-3">
+
+                                                    {/* ICON */}
+                                                    <div className="
+                                        w-10 h-10 rounded-xl
+                                        bg-primary/10
+                                        text-primary
+                                        flex items-center justify-center
+                                        font-bold text-sm
+                                    ">
+                                                        {u.name?.charAt(0)}
+                                                    </div>
+
+                                                    {/* INFOS */}
+                                                    <div>
+
+                                                        <p className="font-semibold text-sm">
+                                                            {u.name}
+                                                        </p>
+
+                                                        <p className="text-xs opacity-70">
+                                                            {u.description || "Unité active"}
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <div className="badge badge-success badge-sm">
+                                                    Active
+                                                </div>
+
+                                            </div>
+
+                                        ))}
+
+                                    </div>
+
                                 )}
 
-                            </div>
-
-                            {/* EMAIL */}
-                            <div>
-
-                                <input
-                                    type="email"
-                                    placeholder="Email"
-                                    autoComplete="off"
-                                    className="input input-bordered w-full"
-                                    {...register("email")}
-                                />
-
-                                {errors.email && (
-                                    <p className="text-error text-sm mt-1">
-                                        {errors.email.message}
-                                    </p>
-                                )}
-
-                            </div>
-
-                            {/* PASSWORD */}
-                            <div>
-
-                                <input
-                                    type="password"
-                                    placeholder="Mot de passe"
-                                    autoComplete="off"
-                                    className="input input-bordered w-full"
-                                    {...register("password")}
-                                />
-
-                                {errors.password && (
-                                    <p className="text-error text-sm mt-1">
-                                        {errors.password.message}
-                                    </p>
-                                )}
-
-                            </div>
-
-                            <div>
-                                <Select
-                                    options={profiles.map((p) => ({
-                                        value: p.id,
-                                        label: p.name,
-                                    }))}
-
-                                    value={
-                                        profiles
-                                            .map((p) => ({
-                                                value: p.id,
-                                                label: p.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value === Number(watch("profileId"))
-                                            ) || null
-                                    }
-
-                                    onChange={(selected: any) =>
-                                        setValue("profileId", String(selected?.value || ""), {
-                                            shouldValidate: true,
-                                            shouldDirty: true,
-                                        })
-                                    }
-
-                                    placeholder="Sélectionner un profil"
-                                    isSearchable
-                                    unstyled
-                                    classNames={selectStyles}
-                                />
-
-                                {errors.profileId && (
-                                    <p className="text-error text-sm mt-1">
-                                        {errors.profileId.message}
-                                    </p>
-                                )}
                             </div>
 
                             {/* FOOTER */}
-                            <div className="flex justify-end gap-3 border-t border-base-300 pt-5 mt-5">
+                            <div className="border-t border-base-300 bg-base-200 px-5 py-3 flex justify-end">
 
                                 <button
-                                    type="button"
-                                    className="btn btn-ghost"
+                                    className="btn btn-sm btn-primary px-6"
+                                    onClick={() => setOpenViewUser(false)}
+                                >
+                                    Fermer
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
+            {/* 🔥 MODAL */}
+            {
+                openModal && (
+
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+
+                        <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200">
+
+                            {/* HEADER */}
+                            <div className="flex items-center justify-between border-b border-base-300 p-5">
+
+                                <div>
+
+                                    <h2 className="text-xl font-bold">
+                                        Ajouter utilisateur
+                                    </h2>
+
+                                    <p className="text-sm opacity-60">
+                                        Création d'un nouveau compte
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    className="btn btn-sm btn-circle btn-ghost"
                                     onClick={() =>
                                         setOpenModal(false)
                                     }
                                 >
-                                    Annuler
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                >
-                                    Ajouter
+                                    <X className="w-5 h-5" />
                                 </button>
 
                             </div>
 
-                        </form>
+                            {/* BODY */}
+                            <form
+                                onSubmit={handleSubmit(
+                                    handleCreateUser
+                                )}
+                                className="p-5 space-y-4"
+                                autoComplete="off"
+                            >
+
+                                {/* USERNAME */}
+                                <div>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Username"
+                                        autoComplete="off"
+                                        className="input input-bordered w-full"
+                                        {...register("username")}
+
+                                    />
+
+                                    {errors.username && (
+                                        <p className="text-error text-sm mt-1">
+                                            {errors.username.message}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                {/* NOMS */}
+                                <div>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Noms"
+                                        className="input input-bordered w-full"
+                                        {...register("noms")}
+                                    />
+
+                                    {errors.noms && (
+                                        <p className="text-error text-sm mt-1">
+                                            {errors.noms.message}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                {/* EMAIL */}
+                                <div>
+
+                                    <input
+                                        type="email"
+                                        placeholder="Email"
+                                        autoComplete="off"
+                                        className="input input-bordered w-full"
+                                        {...register("email")}
+                                    />
+
+                                    {errors.email && (
+                                        <p className="text-error text-sm mt-1">
+                                            {errors.email.message}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                {/* PASSWORD */}
+                                <div>
+
+                                    <input
+                                        type="password"
+                                        placeholder="Mot de passe"
+                                        autoComplete="off"
+                                        className="input input-bordered w-full"
+                                        {...register("password")}
+                                    />
+
+                                    {errors.password && (
+                                        <p className="text-error text-sm mt-1">
+                                            {errors.password.message}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                <div>
+                                    <Select
+                                        options={profiles.map((p) => ({
+                                            value: p.id,
+                                            label: p.name,
+                                        }))}
+
+                                        value={
+                                            profiles
+                                                .map((p) => ({
+                                                    value: p.id,
+                                                    label: p.name,
+                                                }))
+                                                .find(
+                                                    (opt) =>
+                                                        opt.value === Number(watch("profileId"))
+                                                ) || null
+                                        }
+
+                                        onChange={(selected: any) =>
+                                            setValue("profileId", String(selected?.value || ""), {
+                                                shouldValidate: true,
+                                                shouldDirty: true,
+                                            })
+                                        }
+
+                                        placeholder="Sélectionner un profil"
+                                        isSearchable
+                                        unstyled
+                                        classNames={selectStyles}
+                                    />
+
+                                    {errors.profileId && (
+                                        <p className="text-error text-sm mt-1">
+                                            {errors.profileId.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* FOOTER */}
+                                <div className="flex justify-end gap-3 border-t border-base-300 pt-5 mt-5">
+
+                                    <button
+                                        type="button"
+                                        className="btn btn-ghost"
+                                        onClick={() =>
+                                            setOpenModal(false)
+                                        }
+                                    >
+                                        Annuler
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                    >
+                                        Ajouter
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </div>
 
                     </div>
 
-                </div>
+                )
+            }
 
-            )}
+            {
+                editModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
 
-            {editModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                        <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg">
 
-                    <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg">
-
-                        {/* HEADER */}
-                        <div className="flex justify-between p-5 border-b">
-                            <h2 className="text-xl font-bold">
-                                Modifier utilisateur
-                            </h2>
-
-                            <button
-                                className="btn btn-sm btn-circle btn-ghost"
-                                onClick={() => {
-                                    setEditModal(false);
-                                    setEditingUserId(null);
-                                    resetEdit(); // ✅ FIX ICI
-                                }}
-                            >
-                                <X />
-                            </button>
-                        </div>
-
-                        {/* FORM */}
-                        <form
-                            onSubmit={handleSubmitEdit(handleUpdateUser)}
-                            className="p-5 space-y-4"
-                        >
-
-                            {/* USERNAME */}
-                            <div>
-                                <input
-                                    className="input input-bordered w-full"
-                                    placeholder="Username"
-                                    {...registerEdit("username")}
-                                />
-                                {errorsEdit.username && (
-                                    <p className="text-error text-sm">
-                                        {errorsEdit.username.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* NOMS */}
-                            <div>
-                                <input
-                                    className="input input-bordered w-full"
-                                    placeholder="Noms"
-                                    {...registerEdit("noms")}
-                                />
-                                {errorsEdit.noms && (
-                                    <p className="text-error text-sm">
-                                        {errorsEdit.noms.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* EMAIL */}
-                            <div>
-                                <input
-                                    className="input input-bordered w-full"
-                                    placeholder="Email"
-                                    {...registerEdit("email")}
-                                />
-                                {errorsEdit.email && (
-                                    <p className="text-error text-sm">
-                                        {errorsEdit.email.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* PROFILE */}
-                            <div>
-                                <Select
-                                    options={profiles.map((p: any) => ({
-                                        value: p.id,
-                                        label: p.name,
-                                    }))}
-
-                                    value={
-                                        profiles
-                                            .map((p: any) => ({
-                                                value: p.id,
-                                                label: p.name,
-                                            }))
-                                            .find((opt: any) => opt.value === Number(watch("profileId"))) || null
-                                    }
-
-                                    onChange={(selected: any) =>
-                                        setValueEdit("profileId", String(selected?.value || ""), {
-                                            shouldValidate: true,
-                                            shouldDirty: true,
-                                        })
-                                    }
-
-                                    placeholder="Profil"
-                                    unstyled
-                                    isSearchable
-                                    classNames={selectStyles}
-                                />
-
-                                {errorsEdit.profileId?.message && (
-                                    <p className="text-error text-sm">
-                                        {String(errorsEdit.profileId.message)}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* FOOTER */}
-                            <div className="flex justify-end gap-2 pt-4">
+                            {/* HEADER */}
+                            <div className="flex justify-between p-5 border-b">
+                                <h2 className="text-xl font-bold">
+                                    Modifier utilisateur
+                                </h2>
 
                                 <button
-                                    type="button"
-                                    className="btn"
+                                    className="btn btn-sm btn-circle btn-ghost"
                                     onClick={() => {
                                         setEditModal(false);
                                         setEditingUserId(null);
                                         resetEdit(); // ✅ FIX ICI
                                     }}
                                 >
-                                    Annuler
+                                    <X />
                                 </button>
-
-                                <button type="submit" className="btn btn-primary">
-                                    Modifier
-                                </button>
-
                             </div>
 
-                        </form>
+                            {/* FORM */}
+                            <form
+                                onSubmit={handleSubmitEdit(handleUpdateUser)}
+                                className="p-5 space-y-4"
+                            >
 
+                                {/* USERNAME */}
+                                <div>
+                                    <input
+                                        className="input input-bordered w-full"
+                                        placeholder="Username"
+                                        {...registerEdit("username")}
+                                    />
+                                    {errorsEdit.username && (
+                                        <p className="text-error text-sm">
+                                            {errorsEdit.username.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* NOMS */}
+                                <div>
+                                    <input
+                                        className="input input-bordered w-full"
+                                        placeholder="Noms"
+                                        {...registerEdit("noms")}
+                                    />
+                                    {errorsEdit.noms && (
+                                        <p className="text-error text-sm">
+                                            {errorsEdit.noms.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* EMAIL */}
+                                <div>
+                                    <input
+                                        className="input input-bordered w-full"
+                                        placeholder="Email"
+                                        {...registerEdit("email")}
+                                    />
+                                    {errorsEdit.email && (
+                                        <p className="text-error text-sm">
+                                            {errorsEdit.email.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* PROFILE */}
+                                <div>
+                                    <Select
+                                        options={profiles.map((p: any) => ({
+                                            value: p.id,
+                                            label: p.name,
+                                        }))}
+
+                                        value={
+                                            profiles
+                                                .map((p: any) => ({
+                                                    value: p.id,
+                                                    label: p.name,
+                                                }))
+                                                .find(
+                                                    (opt: any) =>
+                                                        opt.value === Number(watchEdit("profileId"))
+                                                ) || null
+                                        }
+
+                                        onChange={(selected: any) =>
+                                            setValueEdit("profileId", String(selected?.value || ""), {
+                                                shouldValidate: true,
+                                                shouldDirty: true,
+                                            })
+                                        }
+
+                                        placeholder="Profil"
+                                        unstyled
+                                        isSearchable
+                                        classNames={selectStyles}
+                                    />
+
+                                    {errorsEdit.profileId?.message && (
+                                        <p className="text-error text-sm">
+                                            {String(errorsEdit.profileId.message)}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* FOOTER */}
+                                <div className="flex justify-end gap-2 pt-4">
+
+                                    <button
+                                        type="button"
+                                        className="btn"
+                                        onClick={() => {
+                                            setEditModal(false);
+                                            setEditingUserId(null);
+                                            resetEdit(); // ✅ FIX ICI
+                                        }}
+                                    >
+                                        Annuler
+                                    </button>
+
+                                    <button type="submit" className="btn btn-primary">
+                                        Modifier
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-        </DashboardLayout>
+        </DashboardLayout >
     );
 }

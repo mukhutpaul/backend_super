@@ -141,3 +141,12 @@ export const deleteUser = async (id: number) => {
   const res = await api.delete(`/auth/users/${id}`);
   return res.data;
 };
+
+export const getUnitesByUser = async (userId: number) => {
+
+    const res = await api.get(
+        `/detail-unites/user/${userId}/unites`
+    );
+
+    return res.data;
+};
