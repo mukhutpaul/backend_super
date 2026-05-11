@@ -9,7 +9,7 @@ import {
   GlobeLock,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Role = "ADMIN" | "CONTROLEUR" | "MANAGER" | "SUPERVISEUR"
 
@@ -30,6 +30,8 @@ export default function Sidebar({
 }) {
   const pathname = usePathname()
   const [pageName, setPageName] = useState<string | null>(null)
+  const [user, setUser] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Role | null>(null)
 
   const navLinks: NavLink[] = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "SUPERVISEUR"] },
@@ -44,15 +46,23 @@ export default function Sidebar({
 
   ]
 
+  useEffect(() => {
+    setUser(localStorage.getItem("user"))
+    setProfile(localStorage.getItem("profile") as Role)
+  }, [])
+
+
   // Filtrer les liens selon l'auth et les rôles
   const filteredLinks = navLinks.filter((link) => {
+
     if (!link.auth) return true
-    if (!localStorage.getItem("user")) return false
-    if (link.roles) {
-      // Convertir session.user.role string en Role
-      const userRole = localStorage.getItem("profile") as Role
-      return link.roles.includes(userRole)
+
+    if (!user) return false
+
+    if (link.roles && profile) {
+      return link.roles.includes(profile)
     }
+
     return true
   })
 

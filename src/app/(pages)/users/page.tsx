@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Search } from "lucide-react";
-import Select from "react-select";
+
 
 
 import Swal from "sweetalert2";
@@ -29,6 +29,11 @@ import { getProfiles } from "@/services/profile.service";
 
 import { toast } from "react-toastify";
 import EmptyState from "@/components/EmptyState";
+import dynamic from "next/dynamic";
+
+const Select = dynamic(() => import("react-select"), {
+    ssr: false,
+})
 
 
 type Profile = {
@@ -140,6 +145,7 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [unitesUser, setUnitesUser] = useState<any[]>([]);
     const [loadingUnites, setLoadingUnites] = useState(false);
+
 
     /**
      * 🔥 MODAL
@@ -267,25 +273,24 @@ export default function UsersPage() {
      * 🔌 LOAD DATA
      */
     const fetchUsers = async () => {
+    try {
+        setLoading(true);
 
-        try {
+        const res = await getUsers();
 
-            setLoading(true);
+        const data = res?.data?.data || res?.data || res;
 
-            const data = await getUsers();
+        const safeData = Array.isArray(data) ? data : [];
 
-            setUsers(data);
-            setFiltered(data);
+        setUsers(safeData);
+        setFiltered(safeData);
 
-        } catch (error) {
-
-            console.error(error);
-
-        } finally {
-
-            setLoading(false);
-        }
-    };
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handleViewUser = async (user: User) => {
 
@@ -439,7 +444,7 @@ export default function UsersPage() {
         filtered.length / limit
     );
 
-    const paginatedData = filtered.slice(
+    const paginatedData = (filtered || []).slice(
         (page - 1) * limit,
         page * limit
     );

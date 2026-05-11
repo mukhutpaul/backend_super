@@ -6,6 +6,12 @@ import { api } from "@/lib/axios";
  * =========================
  */
 
+export type ApiResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
+
 export type LoginPayload = {
   username: string;
   password: string;
@@ -13,7 +19,7 @@ export type LoginPayload = {
 
 export type LoginResponse = {
   token: string;
-  id:number,
+  id: number,
   username: string;
   email?: string;
   noms?: string;
@@ -118,23 +124,25 @@ export const isAuthenticated = (): boolean => {
  */
 
 export const getUsers = async (): Promise<User[]> => {
-  const res = await api.get("/auth/users");
-  return res.data;
+  const res = await api.get<ApiResponse<User[]>>("/auth/users");
+
+  return res.data.data;
 };
 
-export const getUserById = async (
-  id: number
-): Promise<User> => {
-  const res = await api.get(`/auth/users/${id}`);
-  return res.data;
+export const getUserById = async (id: number): Promise<User> => {
+  const res = await api.get<ApiResponse<User>>(`/auth/users/${id}`);
+
+  return res.data.data;
 };
 
 export const updateUser = async (
   id: number,
   data: UpdateUserPayload
-) => {
+): Promise<User> => {
+
   const res = await api.patch(`/auth/users/${id}`, data);
-  return res.data;
+
+  return res.data.data;
 };
 
 export const deleteUser = async (id: number) => {
@@ -144,9 +152,9 @@ export const deleteUser = async (id: number) => {
 
 export const getUnitesByUser = async (userId: number) => {
 
-    const res = await api.get(
-        `/detail-unites/user/${userId}/unites`
-    );
+  const res = await api.get(
+    `/detail-unites/user/${userId}/unites`
+  );
 
-    return res.data;
+  return res.data;
 };

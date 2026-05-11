@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const themes = [
     "light",
@@ -23,6 +24,24 @@ export default function Navbar({
     toggleSidebar: () => void;
     isOpen: boolean;
 }) {
+    const [username, setUsername] = useState("User")
+    const [profile, setProfile] = useState("Profile")
+
+    useEffect(() => {
+
+        const storedUsername = localStorage.getItem("username")
+
+        if (storedUsername) {
+            setUsername(storedUsername)
+        }
+
+        const storedProfile = localStorage.getItem("profile")
+
+        if (storedProfile) {
+            setProfile(storedProfile)
+        }
+
+    }, [])
 
     const changeTheme = (theme: string) => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -106,19 +125,13 @@ export default function Navbar({
                         className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
 
                         <li>
-                            <span>
-                                👤 {typeof window !== "undefined"
-                                    ? localStorage.getItem("username") || "User"
-                                    : "User"}
-                            </span>
+
+                            <span>👤 {username}</span>
+
                         </li>
 
                         <li>
-                            <span>
-                                {typeof window !== "undefined"
-                                    ? localStorage.getItem("profile") || "Profile"
-                                    : "Profile"}
-                            </span>
+                            <span>👤 {profile}</span>
                         </li>
 
                         <div className="divider my-1"></div>
