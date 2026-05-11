@@ -4,7 +4,7 @@ import { api } from "@/lib/axios";
  * TYPES
  */
 export type Seance = {
-    id: number;
+    id: string;
     dateSeance: string;
     dateFin?: string | null;   // 👈 optionnel
     isActive: boolean;
@@ -41,12 +41,12 @@ export type UpdateSeancePayload = {
     isActive?: boolean;
 };
 
-export const startSeance = async (id: number) => {
+export const startSeance = async (id: string) => {
     const res = await api.put(`/seances/${id}/start`);
     return res.data;
 };
 
-export const finishSeance = async (id: number) => {
+export const finishSeance = async (id: string) => {
     const res = await api.put(`/seances/${id}/finish`);
     return res.data;
 };
@@ -62,7 +62,7 @@ export const getSeances = async (): Promise<Seance[]> => {
 /**
  * 📥 GET BY ID
  */
-export const getSeanceById = async (id: number): Promise<Seance> => {
+export const getSeanceById = async (id: string): Promise<Seance> => {
     const res = await api.get(`/seances/${id}`);
     return res.data;
 };
@@ -94,7 +94,7 @@ export const createSeance = async (data: CreateSeancePayload) => {
 /**
  * ✏️ UPDATE
  */
-export const updateSeance = async (id: number, data: UpdateSeancePayload) => {
+export const updateSeance = async (id: string, data: UpdateSeancePayload) => {
     const res = await api.put(`/seances/${id}`, data);
     return res.data;
 };
@@ -102,7 +102,7 @@ export const updateSeance = async (id: number, data: UpdateSeancePayload) => {
 /**
  * 🗑 DELETE
  */
-export const deleteSeance = async (id: number) => {
+export const deleteSeance = async (id: string) => {
     const res = await api.delete(`/seances/${id}`);
     return res.data;
 };

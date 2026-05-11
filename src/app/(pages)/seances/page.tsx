@@ -149,7 +149,7 @@ export default function SeancesPage() {
     /**
      * DELETE
      */
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         const res = await Swal.fire({
             title: "Supprimer séance ?",
             icon: "warning",
