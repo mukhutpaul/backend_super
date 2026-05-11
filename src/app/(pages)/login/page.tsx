@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Lock, Server, Wifi } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+
 
 import { loginRequest } from "@/services/auth.service";
 
@@ -19,6 +21,8 @@ export default function LoginPage() {
     );
 
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
 
     const {
         register,
@@ -63,7 +67,7 @@ export default function LoginPage() {
 
             toast.success("Connexion réussie");
 
-            window.location.href = "/dashboard";
+            router.push("/dashboard");
 
         } catch (error: any) {
             console.error(error);
