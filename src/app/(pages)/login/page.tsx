@@ -92,7 +92,7 @@ export default function LoginPage() {
                     <div className="text-center mb-6">
 
                         <h1 className="text-3xl font-bold text-primary">
-                            PNC CONTROL MANAGER
+                            ABA-CM PNC
                         </h1>
 
                         <p className="text-sm opacity-60 mt-1">

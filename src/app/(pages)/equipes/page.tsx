@@ -148,7 +148,7 @@ export default function EquipesPage() {
             const data = await getUsers();
 
             const superviseurs = data.filter(
-                (u: any) => u.profile?.name === "SUPERVISEUR"
+                (u: any) => u.profile?.name === "CHEF_EQUIPE"
             );
 
             setUsers(superviseurs);

@@ -143,7 +143,7 @@ export default function MissionsPage() {
             const data = await getUsers();
 
             const filtered = data.filter(
-                (u: any) => u.profile?.name === "SUPERVISEUR"
+                (u: any) => u.profile?.name === "CHARGE_MISSION"
             );
 
             setSuperviseurs(filtered);
