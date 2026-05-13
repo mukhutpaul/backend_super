@@ -172,42 +172,43 @@ export default function RecherchePage() {
     };
 
     /* ========================= SEARCH CONTROLE ========================= */
-
     const handleSearchControle = async () => {
+        if (!controleMatricule.trim()) {
+            toast.warning("Entrez un matricule");
+            return;
+        }
 
         try {
-
             setControleLoading(true);
 
             const res = await api.get("/controles", {
                 params: {
+                    matricule: controleMatricule.trim(), // ✅ IMPORTANT
                     page: 0,
                     size: 1,
-                    search: controleMatricule,
                 },
             });
 
-            const found = res.data.content?.[0];
+            // 🔥 support API PAGINÉE OU NON PAGINÉE
+            const data = res.data;
+
+            const found = Array.isArray(data)
+                ? data[0]
+                : data.content?.[0] || data.data?.[0];
 
             if (!found) {
-
                 toast.error("Contrôle introuvable");
-
                 setControle(null);
-
                 return;
             }
 
             setControle(found);
 
-        } catch (e) {
-
-            toast.error(
-                "Erreur recherche contrôle"
-            );
-
+        } catch (error) {
+            console.error(error);
+            toast.error("Erreur recherche contrôle");
+            setControle(null);
         } finally {
-
             setControleLoading(false);
         }
     };
@@ -512,9 +513,9 @@ export default function RecherchePage() {
 
                                 <button
                                     className="btn btn-primary"
-                                    onClick={
-                                        handleSearchControle
-                                    }
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleSearchControle();
+                                    }}
                                     disabled={
                                         controleLoading
                                     }
@@ -926,7 +927,7 @@ export default function RecherchePage() {
 
                                         {/* ================= PHOTO FRAME ================= */}
                                         <div className="w-32 h-32 rounded-xl border-2 border-dashed border-primary/40 bg-white shadow flex items-center justify-center overflow-hidden relative">
-{/* 
+                                            {/* 
                                             {identite.photoUrl ? (
                                                 <img
                                                     src={identite.photoUrl}

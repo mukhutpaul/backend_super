@@ -313,7 +313,7 @@ export default function ControlePage() {
                                 {/* NOM PRINCIPAL */}
                                 <div className="text-center">
                                     <p className="text-xl font-extrabold uppercase text-gray-800">
-                                        {selectedControle?.policier?.noms}
+                                        {selectedControle?.policier?.nom}
                                     </p>
 
                                     <p className="text-sm text-gray-500">

@@ -4,7 +4,7 @@ import axios from "axios";
  * 🌍 Base URLs (mode LOCAL / CENTRAL)
  * Tu peux changer dynamiquement selon login
  */
-const LOCAL_API = "http://10.138.215.185:8090/api";
+const LOCAL_API = "http://localhost:8090/api";
 const REMOTE_API = "https://api.pnc-rdc.gov/api"; // exemple production
 
 // 👉 récupérer le mode choisi (local / remote)
