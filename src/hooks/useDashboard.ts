@@ -1,44 +1,71 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getDashboardStats } from "@/services/dashboard.service";
-import type { DashboardStats } from "@/types/dashboard.types";
+
+export interface DashboardData {
+  totalPoliciers: number;
+  totalUnites: number;
+  totalEquipes: number;
+  totalMissions: number;
+
+  totalControles: number;
+  totalPresent: number;
+  totalJustifies: number;
+}
 
 export function useDashboard() {
-  const [data, setData] = useState<DashboardStats | null>(null);
+
+  const [data, setData] = useState<DashboardData | null>(null);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const [error, setError] = useState("");
+
+  const loadDashboard = async () => {
+
     try {
-      setLoading(true);
-      setError(null);
-
-      console.log("📡 Calling dashboard API...");
 
       const res = await getDashboardStats();
 
-      console.log("✅ Dashboard response:", res);
-
       setData(res);
 
+      setError("");
+
     } catch (err: any) {
-      console.error("❌ Dashboard error full:", err);
+
+      console.error(err);
 
       setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Erreur API dashboard"
+        err?.message || "Erreur chargement dashboard"
       );
 
     } finally {
+
       setLoading(false);
+
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+    /* FIRST LOAD */
+    loadDashboard();
+
+    /* AUTO REFRESH 5s */
+    const interval = setInterval(() => {
+
+      loadDashboard();
+
+    }, 5000);
+
+    return () => clearInterval(interval);
+
+  }, []);
+
+  return {
+    data,
+    loading,
+    error,
+  };
 }

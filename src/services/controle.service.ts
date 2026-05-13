@@ -12,6 +12,7 @@ type Policier = {
     dateNaissance?: string;
     lieuNaissance?: string;
     groupeSanguin?: string; // ✅ AJOUT
+    chefEquipe?: string;
 };
 
 export type Controle = {

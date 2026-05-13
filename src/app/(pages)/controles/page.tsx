@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
-import { Search, Printer } from "lucide-react";
+import { Search, Printer, Box } from "lucide-react";
 import { toast } from "react-toastify";
 import { QRCodeCanvas } from "qrcode.react";
 import jsPDF from "jspdf";
@@ -54,6 +54,7 @@ export default function ControlePage() {
             groupe: p?.groupeSanguin || "",
             dateNaissance: p?.dateNaissance || "",
             lieuNaissance: p?.lieuNaissance || "",
+            equipe: p?.chefEquipe || ""
         });
     };
 
@@ -239,9 +240,13 @@ export default function ControlePage() {
                 </div>
 
                 {/* TABLE */}
+                {/* TABLE */}
                 <div className="card bg-base-100 shadow-md">
-                    <div className="card-body p-0">
+
+                    <div className="card-body p-0 overflow-x-auto">
+
                         <table className="table">
+
                             <thead className="bg-base-200">
                                 <tr>
                                     <th>Matricule</th>
@@ -256,22 +261,68 @@ export default function ControlePage() {
 
                             <tbody>
 
+                                {/* LOADING */}
                                 {initialLoading && (
                                     <tr>
                                         <td colSpan={7} className="text-center py-10">
-                                            loading...
+                                            <div className="flex flex-col items-center gap-2">
+
+                                                <span className="loading loading-spinnerer loading-lg text-primary"></span>
+
+                                                <span className="text-sm text-gray-500">
+                                                    Chargement des contrôles...
+                                                </span>
+
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
 
+                                {/* EMPTY */}
+                                {!initialLoading && paginatedControles.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="text-center py-10 text-gray-500"
+                                        >
+                                            Aucun contrôle trouvé
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {/* DATA */}
                                 {!initialLoading && paginatedControles.map((c) => (
                                     <tr key={c.id}>
+
                                         <td>{c.matricule}</td>
+
                                         <td>{c.noms}</td>
+
                                         <td>{c.unite}</td>
+
                                         <td>{c.grade}</td>
-                                        <td>{c.present ? "Oui" : "Non"}</td>
-                                        <td>{c.justifie ? "Oui" : "Non"}</td>
+
+                                        <td>
+                                            <span
+                                                className={`badge ${c.present
+                                                        ? "badge-success"
+                                                        : "badge-error"
+                                                    }`}
+                                            >
+                                                {c.present ? "Oui" : "Non"}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span
+                                                className={`badge ${c.justifie
+                                                        ? "badge-info"
+                                                        : "badge-ghost"
+                                                    }`}
+                                            >
+                                                {c.justifie ? "Oui" : "Non"}
+                                            </span>
+                                        </td>
 
                                         <td>
                                             {c.present && (
@@ -283,12 +334,77 @@ export default function ControlePage() {
                                                 </button>
                                             )}
                                         </td>
+
                                     </tr>
                                 ))}
 
                             </tbody>
+
                         </table>
+
                     </div>
+
+                    {/* PAGINATION */}
+                    {!initialLoading && filteredControles.length > 0 && (
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-4 border-t border-base-200">
+
+                            {/* INFOS */}
+                            <div className="text-sm text-gray-500">
+                                Page <span className="font-bold">{page}</span> sur{" "}
+                                <span className="font-bold">{totalPages}</span>
+                            </div>
+
+                            {/* BUTTONS */}
+                            <div className="join">
+
+                                {/* PREV */}
+                                <button
+                                    className="join-item btn"
+                                    disabled={page === 1}
+                                    onClick={() =>
+                                        setPage((p) => Math.max(p - 1, 1))
+                                    }
+                                >
+                                    «Précdent
+                                </button>
+
+                                {/* PAGES */}
+                                {Array.from(
+                                    { length: totalPages },
+                                    (_, i) => i + 1
+                                ).map((p) => (
+
+                                    <button
+                                        key={p}
+                                        className={`join-item btn ${page === p
+                                                ? "btn-primary"
+                                                : ""
+                                            }`}
+                                        onClick={() => setPage(p)}
+                                    >
+                                        page
+                                    </button>
+
+                                ))}
+
+                                {/* NEXT */}
+                                <button
+                                    className="join-item btn"
+                                    disabled={page === totalPages}
+                                    onClick={() =>
+                                        setPage((p) =>
+                                            Math.min(p + 1, totalPages)
+                                        )
+                                    }
+                                >
+                                    Suivant»
+                                </button>
+
+                            </div>
+
+                        </div>
+                    )}
+
                 </div>
 
                 {/* MODAL QR */}
