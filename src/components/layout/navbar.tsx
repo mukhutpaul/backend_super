@@ -8,13 +8,7 @@ const themes = [
     "dark",
     "cupcake",
     "corporate",
-    "synthwave",
-    "retro",
-    "cyberpunk",
-    "dracula",
-    "night",
-    "coffee",
-    "nord",
+       "nord",
     "autumn",
     "acid",
     "lemonade",
@@ -24,7 +18,14 @@ const themes = [
     "abyss",
     "silk",
     "pastel",
-    "wireframe"
+    "wireframe",
+    "synthwave",
+    "retro",
+    "cyberpunk",
+    "dracula",
+    "night",
+    "coffee"
+ 
 ];
 
 export default function Navbar({
