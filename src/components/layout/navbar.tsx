@@ -14,7 +14,17 @@ const themes = [
     "dracula",
     "night",
     "coffee",
-    "luxury",
+    "nord",
+    "autumn",
+    "acid",
+    "lemonade",
+    "winter",
+    "dim",
+    "caramellatte",
+    "abyss",
+    "silk",
+    "pastel",
+    "wireframe"
 ];
 
 export default function Navbar({

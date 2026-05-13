@@ -266,7 +266,7 @@ export default function ControlePage() {
                                         <th>Unité</th>
                                         <th>Grade</th>
                                         <th>Présent</th>
-                                        <th>Statut</th>
+                                        <th>Justification</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
