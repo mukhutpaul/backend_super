@@ -18,6 +18,7 @@ export type Controle = {
     policier?: Policier;
 
     matricule?: string;
+    noms?: string;
     unite?: string;
     grade?: string;
 
@@ -62,14 +63,14 @@ export const getControles = async (params: {
 /* ========================= SEARCH BY IDENTITE ========================= */
 
 export const searchControleByIdentite = async (params: {
-    nom?: string;
+    noms?: string;
     postnom?: string;
     prenom?: string;
     dateNaissance?: string; // format attendu: yyyy-MM-dd
 }) => {
     const res = await api.get<Controle[]>("/controles/search/identite", {
         params: {
-            nom: params.nom ?? "",
+            nom: params.noms ?? "",
             postnom: params.postnom ?? "",
             prenom: params.prenom ?? "",
             dateNaissance: params.dateNaissance ?? "",

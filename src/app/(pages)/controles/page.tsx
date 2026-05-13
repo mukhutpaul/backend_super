@@ -23,7 +23,7 @@ type Unite = {
 type Policier = {
     id: string; // ✅ UUID = string
     matricule: string;
-    nom: string;
+    noms: string;
     postnom: string;
     prenom: string;
     sexe: string;
@@ -262,6 +262,7 @@ export default function ControlePage() {
                                 <thead className="bg-base-200">
                                     <tr>
                                         <th>Matricule</th>
+                                        <th>Noms</th>
                                         <th>Unité</th>
                                         <th>Grade</th>
                                         <th>Présent</th>
@@ -292,10 +293,11 @@ export default function ControlePage() {
                                     {!loading && controles.map((c) => (
                                         <tr key={c.id}>
                                             <td>{c.matricule}</td>
+                                            <td>{c.noms}</td>
                                             <td>{c.unite}</td>
                                             <td>{c.grade}</td>
                                             <td>{c.present ? "Oui" : "Non"}</td>
-                                            <td>{c.status}</td>
+                                            <td>{c.justifie ? "Oui" : "Non"}</td>
 
                                             <td>
                                                 {c.present && (
