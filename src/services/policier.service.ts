@@ -10,6 +10,8 @@ export type Policier = {
     telephone?: string;
     email?: string;
     statut: string;
+    dateNaissance:string;
+    groupeSanguin:string;
 };
 
 type GetPoliciersParams = {

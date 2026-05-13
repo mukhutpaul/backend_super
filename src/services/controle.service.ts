@@ -2,13 +2,16 @@ import { api } from "@/lib/axios";
 
 /* ========================= TYPES ========================= */
 
-export type Policier = {
+type Policier = {
     id: string;
     matricule: string;
     nom: string;
     postnom: string;
     prenom: string;
     sexe?: string;
+    dateNaissance?: string;
+    lieuNaissance?: string;
+    groupeSanguin?: string; // ✅ AJOUT
 };
 
 export type Controle = {
@@ -21,7 +24,10 @@ export type Controle = {
     noms?: string;
     unite?: string;
     grade?: string;
-
+    chargeMission?: string;
+    chefEquipe: string;
+    controleur: string;
+    seance : string;
     present?: boolean;
     justifie?: boolean;
 

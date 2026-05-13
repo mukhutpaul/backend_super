@@ -11,15 +11,7 @@ import QRCode from "qrcode";
 
 import { Controle, getControles } from "@/services/controle.service";
 
-/* ========================= TYPES ========================= */
-
-type Policier = {
-    id: string;
-    matricule: string;
-    noms: string;
-    postnom: string;
-    prenom: string;
-};
+/* ========================= STYLE SELECT ========================= */
 
 export const selectStyles = {
     control: () =>
@@ -49,6 +41,22 @@ export default function ControlePage() {
 
     const [selectedControle, setSelectedControle] = useState<Controle | null>(null);
 
+    /* ========================= QR DATA ========================= */
+
+    const buildQRData = (c: Controle) => {
+        const p = c.policier;
+
+        return JSON.stringify({
+            matricule: c.matricule,
+            nom: p?.nom || "",
+            postnom: p?.postnom || "",
+            genre: p?.sexe || "",
+            groupe: p?.groupeSanguin || "",
+            dateNaissance: p?.dateNaissance || "",
+            lieuNaissance: p?.lieuNaissance || "",
+        });
+    };
+
     /* ========================= LOAD ========================= */
 
     const loadData = async () => {
@@ -63,7 +71,7 @@ export default function ControlePage() {
         }
     };
 
-    /* ========================= INIT + AUTO REFRESH ========================= */
+    /* ========================= INIT AUTO REFRESH ========================= */
 
     useEffect(() => {
         loadData();
@@ -73,10 +81,9 @@ export default function ControlePage() {
         }, 5000);
 
         return () => clearInterval(interval);
-
     }, []);
 
-    /* ========================= UNIQUES UNITES ========================= */
+    /* ========================= FILTER UNITE ========================= */
 
     const uniqueUnites = useMemo(() => {
         return Array.from(
@@ -84,10 +91,9 @@ export default function ControlePage() {
         );
     }, [controles]);
 
-    /* ========================= FILTERS ========================= */
+    /* ========================= FILTER DATA ========================= */
 
     const filteredControles = useMemo(() => {
-
         return controles.filter((c) => {
 
             const matchSearch =
@@ -98,19 +104,15 @@ export default function ControlePage() {
                 c.unite?.toLowerCase().includes(search.toLowerCase());
 
             const matchUnite =
-                !selectedUnite ||
-                c.unite === selectedUnite;
+                !selectedUnite || c.unite === selectedUnite;
 
             return matchSearch && matchUnite;
         });
-
     }, [controles, search, selectedUnite]);
 
-    /* ========================= PAGINATION FRONT ========================= */
+    /* ========================= PAGINATION ========================= */
 
-    const totalPages = Math.ceil(
-        filteredControles.length / ITEMS_PER_PAGE
-    );
+    const totalPages = Math.ceil(filteredControles.length / ITEMS_PER_PAGE);
 
     const paginatedControles = useMemo(() => {
         return filteredControles.slice(
@@ -119,7 +121,7 @@ export default function ControlePage() {
         );
     }, [filteredControles, page]);
 
-    /* ========================= PRINT ========================= */
+    /* ========================= PDF PRINT ========================= */
 
     const handlePrintPDF = async (c: Controle) => {
 
@@ -158,10 +160,15 @@ export default function ControlePage() {
         doc.text(`Grade     : ${c.grade}`, 5, 58);
         doc.text(`Unité     : ${c.unite}`, 5, 63);
 
-        const qrData = await QRCode.toDataURL(JSON.stringify(c));
+        // ✅ QR IDENTIQUE UI + PDF
+        const qrData = await QRCode.toDataURL(buildQRData(c), {
+            errorCorrectionLevel: "H",
+            margin: 2,
+            width: 300,
+        });
+
         doc.addImage(qrData, "PNG", 48, 25, 22, 22);
 
-        doc.setFont("helvetica", "bold");
         doc.setTextColor(c.present ? 0 : 180, c.present ? 120 : 0, 0);
 
         doc.text(
@@ -194,15 +201,9 @@ export default function ControlePage() {
 
             <div className="p-6 space-y-6">
 
-                {/* HEADER */}
-                <div>
-                    <h1 className="text-2xl font-bold">Contrôles</h1>
-                    <p className="text-sm opacity-70">
-                        Liste des contrôles en temps réel
-                    </p>
-                </div>
+                <h1 className="text-2xl font-bold">Contrôles</h1>
 
-                {/* SEARCH + FILTER */}
+                {/* SEARCH */}
                 <div className="card bg-base-200">
                     <div className="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -210,7 +211,7 @@ export default function ControlePage() {
                             <Search className="absolute left-3 top-3 opacity-50" />
                             <input
                                 className="input input-bordered w-full pl-10"
-                                placeholder="Recherche matricule, nom, grade..."
+                                placeholder="Recherche..."
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
@@ -220,7 +221,7 @@ export default function ControlePage() {
                         </div>
 
                         <Select
-                            placeholder="Filtrer par unité"
+                            placeholder="Filtrer unité"
                             unstyled
                             isClearable
                             classNames={selectStyles}
@@ -240,163 +241,143 @@ export default function ControlePage() {
                 {/* TABLE */}
                 <div className="card bg-base-100 shadow-md">
                     <div className="card-body p-0">
-                        <div className="overflow-x-auto">
+                        <table className="table">
+                            <thead className="bg-base-200">
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Noms</th>
+                                    <th>Unité</th>
+                                    <th>Grade</th>
+                                    <th>Présent</th>
+                                    <th>Justifié</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
 
-                            <table className="table">
+                            <tbody>
 
-                                <thead className="bg-base-200">
+                                {initialLoading && (
                                     <tr>
-                                        <th>Matricule</th>
-                                        <th>Noms</th>
-                                        <th>Unité</th>
-                                        <th>Grade</th>
-                                        <th>Présent</th>
-                                        <th>Justifié</th>
-                                        <th>Action</th>
+                                        <td colSpan={7} className="text-center py-10">
+                                            loading...
+                                        </td>
                                     </tr>
-                                </thead>
+                                )}
 
-                                <tbody>
+                                {!initialLoading && paginatedControles.map((c) => (
+                                    <tr key={c.id}>
+                                        <td>{c.matricule}</td>
+                                        <td>{c.noms}</td>
+                                        <td>{c.unite}</td>
+                                        <td>{c.grade}</td>
+                                        <td>{c.present ? "Oui" : "Non"}</td>
+                                        <td>{c.justifie ? "Oui" : "Non"}</td>
 
-                                    {initialLoading && (
-                                        <tr>
-                                            <td colSpan={7} className="text-center py-10">
-                                                <span className="loading loading-spinner"></span>
-                                            </td>
-                                        </tr>
-                                    )}
+                                        <td>
+                                            {c.present && (
+                                                <button
+                                                    className="btn btn-sm btn-primary btn-outline"
+                                                    onClick={() => setSelectedControle(c)}
+                                                >
+                                                    <Printer size={16} />
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
 
-                                    {!initialLoading && paginatedControles.length === 0 && (
-                                        <tr>
-                                            <td colSpan={7} className="text-center py-10">
-                                                <Search className="mx-auto opacity-50" />
-                                                <p>Aucun contrôle</p>
-                                            </td>
-                                        </tr>
-                                    )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                                    {!initialLoading && paginatedControles.map((c) => (
-                                        <tr key={c.id}>
-                                            <td>{c.matricule}</td>
-                                            <td>{c.noms}</td>
-                                            <td>{c.unite}</td>
-                                            <td>{c.grade}</td>
-                                            <td>{c.present ? "Oui" : "Non"}</td>
-                                            <td>{c.justifie ? "Oui" : "Non"}</td>
+                {/* MODAL QR */}
+                {selectedControle && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
 
-                                            <td>
-                                                {c.present && (
-                                                    <button
-                                                        className="btn btn-sm btn-primary btn-outline"
-                                                        onClick={() => setSelectedControle(c)}
-                                                    >
-                                                        <Printer size={16} />
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
 
-                                </tbody>
+                            {/* HEADER */}
+                            <div className="bg-blue-900 text-white p-4 text-center">
+                                <h2 className="text-lg font-bold tracking-wide">
+                                    PNC - CONTRÔLE
+                                </h2>
+                                <p className="text-xs opacity-80">
+                                    Police Nationale Congolaise
+                                </p>
+                            </div>
 
-                            </table>
+                            {/* BODY */}
+                            <div className="p-5 space-y-4">
+
+                                {/* NOM PRINCIPAL */}
+                                <div className="text-center">
+                                    <p className="text-xl font-extrabold uppercase text-gray-800">
+                                        {selectedControle?.policier?.noms}
+                                    </p>
+
+                                    <p className="text-sm text-gray-500">
+                                        {selectedControle?.policier?.postnom} {selectedControle?.policier?.prenom}
+                                    </p>
+                                </div>
+
+                                {/* INFOS + QR */}
+                                <div className="grid grid-cols-2 gap-4 items-center">
+
+                                    {/* INFOS */}
+                                    <div className="text-xs space-y-1 bg-gray-50 p-3 rounded-lg">
+                                        <p><span className="font-semibold">Mat:</span> {selectedControle.matricule}</p>
+                                        <p><span className="font-semibold">Grade:</span> {selectedControle.grade}</p>
+                                        <p><span className="font-semibold">Unité:</span> {selectedControle.unite}</p>
+
+                                        <p className="mt-2">
+                                            <span className={`px-2 py-1 rounded text-white text-[10px]
+                                ${selectedControle.present ? "bg-green-600" : "bg-red-600"}`}>
+                                                {selectedControle.present ? "PRESENT" : "ABSENT"}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    {/* QR */}
+                                    <div className="flex justify-center">
+                                        <div className="p-2 bg-white border rounded-xl shadow">
+                                            <QRCodeCanvas
+                                                value={buildQRData(selectedControle)}
+                                                size={140}
+                                                level="H"
+                                                includeMargin={true}
+                                            />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {/* ACTIONS */}
+                                <div className="flex gap-2 pt-3">
+
+                                    <button
+                                        className="btn btn-outline w-1/2"
+                                        onClick={() => setSelectedControle(null)}
+                                    >
+                                        Fermer
+                                    </button>
+
+                                    <button
+                                        className="btn btn-primary w-1/2"
+                                        onClick={() => handlePrintPDF(selectedControle)}
+                                    >
+                                        Imprimer PDF
+                                    </button>
+
+                                </div>
+
+                            </div>
 
                         </div>
                     </div>
-                </div>
-
-                {/* PAGINATION */}
-                <div className="flex justify-between items-center">
-
-                    <p className="text-sm opacity-70">
-                        {filteredControles.length} contrôles
-                    </p>
-
-                    <div className="join">
-
-                        <button
-                            className="join-item btn btn-sm"
-                            disabled={page === 1}
-                            onClick={() => setPage((p) => p - 1)}
-                        >
-                            «Précedant
-                        </button>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                            <button
-                                key={p}
-                                className={`join-item btn btn-sm ${page === p ? "btn-primary" : ""}`}
-                                onClick={() => setPage(p)}
-                            >
-                                
-                            </button>
-                        ))}
-
-                        <button
-                            className="join-item btn btn-sm"
-                            disabled={page === totalPages}
-                            onClick={() => setPage((p) => p + 1)}
-                        >
-                            Suivant»
-                        </button>
-
-                    </div>
-
-                </div>
+                )}
 
             </div>
-
-            {/* MODAL */}
-            {selectedControle && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-
-                    <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-5 space-y-4">
-
-                        <div className="text-center border-b pb-3">
-                            <h2 className="text-lg font-bold uppercase">PNC Contrôle</h2>
-                            <p className="text-xs opacity-60">Police Nationale Congolaise</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-
-                            <div>
-                                <p className="font-bold">{selectedControle?.policier?.nom || "-"}</p>
-                                <p>{selectedControle?.policier?.postnom || "-"}</p>
-                                <p>{selectedControle?.policier?.prenom || "-"}</p>
-
-                                <div className="text-xs mt-2">
-                                    <p>Mat: {selectedControle.matricule}</p>
-                                    <p>Grade: {selectedControle.grade}</p>
-                                    <p>Unité: {selectedControle.unite}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-center">
-                                <QRCodeCanvas value={JSON.stringify(selectedControle)} size={150} />
-                            </div>
-
-                        </div>
-
-                        <div className="flex justify-center">
-                            <span className={`px-3 py-1 text-white text-xs rounded ${selectedControle.present ? "bg-green-600" : "bg-red-600"}`}>
-                                {selectedControle.present ? "PRESENT" : "ABSENT"}
-                            </span>
-                        </div>
-
-                        <div className="flex gap-2 pt-3 border-t">
-                            <button className="btn btn-outline w-1/2" onClick={() => setSelectedControle(null)}>
-                                Fermer
-                            </button>
-
-                            <button className="btn btn-primary w-1/2" onClick={() => handlePrintPDF(selectedControle)}>
-                                Imprimer
-                            </button>
-                        </div>
-
-                    </div>
-
-                </div>
-            )}
 
         </DashboardLayout>
     );
