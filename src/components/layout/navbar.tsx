@@ -8,7 +8,7 @@ const themes = [
     "dark",
     "cupcake",
     "corporate",
-       "nord",
+    "nord",
     "autumn",
     "acid",
     "lemonade",

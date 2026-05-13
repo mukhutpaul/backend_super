@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/dashboard-layout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
 import { Search, Printer } from "lucide-react";
 import { toast } from "react-toastify";
@@ -10,54 +10,22 @@ import jsPDF from "jspdf";
 import QRCode from "qrcode";
 
 import { Controle, getControles } from "@/services/controle.service";
-import { getUnites } from "@/services/unite.service";
-
 
 /* ========================= TYPES ========================= */
 
-type Unite = {
-    id: number;
-    name: string;
-};
-
 type Policier = {
-    id: string; // ✅ UUID = string
+    id: string;
     matricule: string;
     noms: string;
     postnom: string;
     prenom: string;
-    sexe: string;
 };
-
-// type Controle = {
-//     id: string;
-//     uid?: string;
-
-//     policier?: Policier; // ✅ IMPORTANT
-
-//     present?: boolean;
-//     justifie?: boolean;
-
-//     situation?: string;
-//     status?: string;
-
-//     matricule?: string;
-//     unite?: string;
-//     grade?: string;
-
-//     isActif?: boolean;
-//     createdAt?: string;
-// };
-
-/* ========================= SELECT STYLE ========================= */
 
 export const selectStyles = {
     control: () =>
         "input input-bordered w-full min-h-[48px] flex flex-wrap px-2",
-
     menu: () =>
         "bg-base-100 border border-base-300 rounded-box shadow-lg mt-2 z-50",
-
     option: ({ isFocused, isSelected }: any) =>
         `
         px-4 py-2 cursor-pointer text-sm
@@ -71,33 +39,98 @@ export const selectStyles = {
 export default function ControlePage() {
 
     const [controles, setControles] = useState<Controle[]>([]);
-    const [unites, setUnites] = useState<Unite[]>([]);
-
     const [search, setSearch] = useState("");
-    const [selectedUnite, setSelectedUnite] = useState<number | null>(null);
+    const [selectedUnite, setSelectedUnite] = useState<string | null>(null);
 
-    const [page, setPage] = useState(0);
-    const size = 100;
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
 
-    const [totalPages, setTotalPages] = useState(0);
-    const [loading, setLoading] = useState(false);
-
-    /* ========================= QR MODAL ========================= */
+    const [initialLoading, setInitialLoading] = useState(true);
 
     const [selectedControle, setSelectedControle] = useState<Controle | null>(null);
 
     /* ========================= LOAD ========================= */
 
+    const loadData = async () => {
+        try {
+            const res = await getControles();
+            setControles(Array.isArray(res) ? res : []);
+        } catch (err) {
+            console.error(err);
+            toast.error("Erreur chargement contrôles");
+        } finally {
+            setInitialLoading(false);
+        }
+    };
+
+    /* ========================= INIT + AUTO REFRESH ========================= */
+
+    useEffect(() => {
+        loadData();
+
+        const interval = setInterval(() => {
+            loadData();
+        }, 5000);
+
+        return () => clearInterval(interval);
+
+    }, []);
+
+    /* ========================= UNIQUES UNITES ========================= */
+
+    const uniqueUnites = useMemo(() => {
+        return Array.from(
+            new Set(controles.map((c) => c.unite).filter(Boolean))
+        );
+    }, [controles]);
+
+    /* ========================= FILTERS ========================= */
+
+    const filteredControles = useMemo(() => {
+
+        return controles.filter((c) => {
+
+            const matchSearch =
+                !search ||
+                c.matricule?.toLowerCase().includes(search.toLowerCase()) ||
+                c.noms?.toLowerCase().includes(search.toLowerCase()) ||
+                c.grade?.toLowerCase().includes(search.toLowerCase()) ||
+                c.unite?.toLowerCase().includes(search.toLowerCase());
+
+            const matchUnite =
+                !selectedUnite ||
+                c.unite === selectedUnite;
+
+            return matchSearch && matchUnite;
+        });
+
+    }, [controles, search, selectedUnite]);
+
+    /* ========================= PAGINATION FRONT ========================= */
+
+    const totalPages = Math.ceil(
+        filteredControles.length / ITEMS_PER_PAGE
+    );
+
+    const paginatedControles = useMemo(() => {
+        return filteredControles.slice(
+            (page - 1) * ITEMS_PER_PAGE,
+            page * ITEMS_PER_PAGE
+        );
+    }, [filteredControles, page]);
+
+    /* ========================= PRINT ========================= */
+
     const handlePrintPDF = async (c: Controle) => {
+
         const doc = new jsPDF({
             orientation: "portrait",
             unit: "mm",
-            format: [74, 105], // A8
+            format: [74, 105],
         });
 
         const p = c.policier;
 
-        // ================= HEADER =================
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.text("CONTRÔLE PNC", 37, 10, { align: "center" });
@@ -108,7 +141,6 @@ export default function ControlePage() {
 
         doc.line(5, 16, 69, 16);
 
-        // ================= IDENTITÉ =================
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
         doc.text("IDENTITE", 5, 22);
@@ -118,7 +150,6 @@ export default function ControlePage() {
         doc.text(`Postnom : ${p?.postnom ?? "-"}`, 5, 33);
         doc.text(`Prenom  : ${p?.prenom ?? "-"}`, 5, 38);
 
-        // ================= INFOS =================
         doc.setFont("helvetica", "bold");
         doc.text("CONTROLE", 5, 47);
 
@@ -127,13 +158,10 @@ export default function ControlePage() {
         doc.text(`Grade     : ${c.grade}`, 5, 58);
         doc.text(`Unité     : ${c.unite}`, 5, 63);
 
-        // ================= QR CODE =================
         const qrData = await QRCode.toDataURL(JSON.stringify(c));
         doc.addImage(qrData, "PNG", 48, 25, 22, 22);
 
-        // ================= STATUS =================
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
         doc.setTextColor(c.present ? 0 : 180, c.present ? 120 : 0, 0);
 
         doc.text(
@@ -145,14 +173,6 @@ export default function ControlePage() {
 
         doc.setTextColor(0, 0, 0);
 
-        // ================= FOOTER =================
-        doc.setFontSize(6);
-        doc.setFont("helvetica", "italic");
-        doc.text("PNC - Document officiel de contrôle", 37, 100, {
-            align: "center",
-        });
-
-        // ================= PRINT DIRECT (NO DOWNLOAD) =================
         const pdfBlobUrl = doc.output("bloburl");
 
         const printWindow = window.open(pdfBlobUrl);
@@ -166,43 +186,6 @@ export default function ControlePage() {
             toast.error("Impossible d'ouvrir la fenêtre d'impression");
         }
     };
-    const loadData = async () => {
-        try {
-            setLoading(true);
-
-            const res = await getControles({
-                page,
-                size,
-                search,
-                unite: selectedUnite ? String(selectedUnite) : undefined,
-            });
-
-            setControles(res.content);
-            setTotalPages(res.totalPages);
-
-        } catch (err) {
-            toast.error("Erreur chargement contrôles");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, [page, search, selectedUnite]);
-
-    useEffect(() => {
-        const loadUnites = async () => {
-            try {
-                const uni = await getUnites();
-                setUnites(uni);
-            } catch {
-                toast.error("Erreur unités");
-            }
-        };
-
-        loadUnites();
-    }, []);
 
     /* ========================= UI ========================= */
 
@@ -215,35 +198,39 @@ export default function ControlePage() {
                 <div>
                     <h1 className="text-2xl font-bold">Contrôles</h1>
                     <p className="text-sm opacity-70">
-                        Liste des contrôles avec QR code imprimable
+                        Liste des contrôles en temps réel
                     </p>
                 </div>
 
-                {/* FILTERS */}
+                {/* SEARCH + FILTER */}
                 <div className="card bg-base-200">
                     <div className="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <input
-                            className="input input-bordered w-full"
-                            placeholder="Recherche matricule..."
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setPage(0);
-                            }}
-                        />
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3 opacity-50" />
+                            <input
+                                className="input input-bordered w-full pl-10"
+                                placeholder="Recherche matricule, nom, grade..."
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
 
                         <Select
                             placeholder="Filtrer par unité"
                             unstyled
                             isClearable
                             classNames={selectStyles}
-                            options={unites.map((u) => ({
-                                value: u.id,
-                                label: u.name,
+                            options={uniqueUnites.map((u) => ({
+                                value: u,
+                                label: u,
                             }))}
                             onChange={(opt: any) => {
                                 setSelectedUnite(opt?.value || null);
-                                setPage(0);
+                                setPage(1);
                             }}
                         />
 
@@ -252,9 +239,7 @@ export default function ControlePage() {
 
                 {/* TABLE */}
                 <div className="card bg-base-100 shadow-md">
-
                     <div className="card-body p-0">
-
                         <div className="overflow-x-auto">
 
                             <table className="table">
@@ -266,31 +251,31 @@ export default function ControlePage() {
                                         <th>Unité</th>
                                         <th>Grade</th>
                                         <th>Présent</th>
-                                        <th>Justification</th>
+                                        <th>Justifié</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
 
-                                    {loading && (
+                                    {initialLoading && (
                                         <tr>
-                                            <td colSpan={6} className="text-center py-10">
+                                            <td colSpan={7} className="text-center py-10">
                                                 <span className="loading loading-spinner"></span>
                                             </td>
                                         </tr>
                                     )}
 
-                                    {!loading && controles.length === 0 && (
+                                    {!initialLoading && paginatedControles.length === 0 && (
                                         <tr>
-                                            <td colSpan={6} className="text-center py-10">
+                                            <td colSpan={7} className="text-center py-10">
                                                 <Search className="mx-auto opacity-50" />
                                                 <p>Aucun contrôle</p>
                                             </td>
                                         </tr>
                                     )}
 
-                                    {!loading && controles.map((c) => (
+                                    {!initialLoading && paginatedControles.map((c) => (
                                         <tr key={c.id}>
                                             <td>{c.matricule}</td>
                                             <td>{c.noms}</td>
@@ -302,14 +287,13 @@ export default function ControlePage() {
                                             <td>
                                                 {c.present && (
                                                     <button
-                                                        className="btn btn-sm btn-primary    btn-ou"
+                                                        className="btn btn-sm btn-primary btn-outline"
                                                         onClick={() => setSelectedControle(c)}
                                                     >
                                                         <Printer size={16} />
                                                     </button>
                                                 )}
                                             </td>
-
                                         </tr>
                                     ))}
 
@@ -318,34 +302,42 @@ export default function ControlePage() {
                             </table>
 
                         </div>
-
                     </div>
-
                 </div>
 
                 {/* PAGINATION */}
                 <div className="flex justify-between items-center">
 
                     <p className="text-sm opacity-70">
-                        Page {page + 1} / {totalPages || 1}
+                        {filteredControles.length} contrôles
                     </p>
 
                     <div className="join">
 
                         <button
                             className="join-item btn btn-sm"
-                            disabled={page === 0}
+                            disabled={page === 1}
                             onClick={() => setPage((p) => p - 1)}
                         >
-                            «
+                            «Précedant
                         </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                            <button
+                                key={p}
+                                className={`join-item btn btn-sm ${page === p ? "btn-primary" : ""}`}
+                                onClick={() => setPage(p)}
+                            >
+                                
+                            </button>
+                        ))}
 
                         <button
                             className="join-item btn btn-sm"
-                            disabled={page + 1 >= totalPages}
+                            disabled={page === totalPages}
                             onClick={() => setPage((p) => p + 1)}
                         >
-                            »
+                            Suivant»
                         </button>
 
                     </div>
@@ -354,93 +346,58 @@ export default function ControlePage() {
 
             </div>
 
-            {/* ========================= QR MODAL ========================= */}
-            {/* ========================= QR MODAL (A8 STYLE) ========================= */}
-            {/* ========================= QR MODAL ========================= */}
+            {/* MODAL */}
             {selectedControle && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
 
-                    {/* CARD */}
                     <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-5 space-y-4">
 
-                        {/* HEADER */}
                         <div className="text-center border-b pb-3">
-                            <h2 className="text-lg font-bold uppercase">
-                                Pnc-Contrôle
-                            </h2>
-                            <p className="text-xs opacity-60">
-                                Police Nationale Congolaise
-                            </p>
+                            <h2 className="text-lg font-bold uppercase">PNC Contrôle</h2>
+                            <p className="text-xs opacity-60">Police Nationale Congolaise</p>
                         </div>
 
-                        {/* INFOS PRINCIPALES */}
                         <div className="grid grid-cols-2 gap-4">
 
-                            {/* IDENTITE */}
-                            <div className="space-y-1">
+                            <div>
+                                <p className="font-bold">{selectedControle?.policier?.nom || "-"}</p>
+                                <p>{selectedControle?.policier?.postnom || "-"}</p>
+                                <p>{selectedControle?.policier?.prenom || "-"}</p>
 
-                                <p className="text-base font-bold">
-                                    {selectedControle?.policier?.nom || "-"}
-                                </p>
-
-                                <p className="text-base font-semibold">
-                                    {selectedControle?.policier?.postnom || "-"}
-                                </p>
-
-                                <p className="text-base">
-                                    {selectedControle?.policier?.prenom || "-"}
-                                </p>
-
-                                <div className="text-xs opacity-70 mt-2 space-y-1">
-                                    <p><span className="font-semibold">Mat:</span> {selectedControle.matricule}</p>
-                                    <p><span className="font-semibold">Grade:</span> {selectedControle.grade}</p>
-                                    <p><span className="font-semibold">Unité:</span> {selectedControle.unite}</p>
+                                <div className="text-xs mt-2">
+                                    <p>Mat: {selectedControle.matricule}</p>
+                                    <p>Grade: {selectedControle.grade}</p>
+                                    <p>Unité: {selectedControle.unite}</p>
                                 </div>
-
                             </div>
 
-                            {/* QR CODE */}
-                            <div className="flex justify-center items-center">
-                                <div className="p-2 border rounded-lg bg-white">
-                                    <QRCodeCanvas
-                                        value={JSON.stringify(selectedControle)}
-                                        size={170}   // 👈 QR PLUS GRAND
-                                    />
-                                </div>
+                            <div className="flex justify-center">
+                                <QRCodeCanvas value={JSON.stringify(selectedControle)} size={150} />
                             </div>
 
                         </div>
 
-                        {/* STATUS */}
                         <div className="flex justify-center">
-                            <span className={`text-xs px-3 py-1 rounded text-white font-semibold
-                    ${selectedControle.present ? "bg-green-600" : "bg-red-600"}`}>
+                            <span className={`px-3 py-1 text-white text-xs rounded ${selectedControle.present ? "bg-green-600" : "bg-red-600"}`}>
                                 {selectedControle.present ? "PRESENT" : "ABSENT"}
                             </span>
                         </div>
 
-                        {/* ACTIONS */}
-                        <div className="flex justify-between pt-3 border-t">
-
-                            <button
-                                className="btn btn-sm btn-outline w-1/2 mr-2"
-                                onClick={() => setSelectedControle(null)}
-                            >
+                        <div className="flex gap-2 pt-3 border-t">
+                            <button className="btn btn-outline w-1/2" onClick={() => setSelectedControle(null)}>
                                 Fermer
                             </button>
 
-                            <button
-                                className="btn btn-sm btn-primary w-1/2 ml-2"
-                                onClick={() => handlePrintPDF(selectedControle)}
-                            >
-                                Imprimer PDF
+                            <button className="btn btn-primary w-1/2" onClick={() => handlePrintPDF(selectedControle)}>
+                                Imprimer
                             </button>
-
                         </div>
 
                     </div>
+
                 </div>
             )}
+
         </DashboardLayout>
     );
 }

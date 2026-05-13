@@ -42,21 +42,8 @@ export type PageResponse<T> = {
     totalElements: number;
 };
 
-export const getControles = async (params: {
-    page: number;
-    size: number;
-    search?: string;
-    unite?: string;
-}) => {
-    const res = await api.get<PageResponse<Controle>>("/controles", {
-        params: {
-            page: params.page,
-            size: params.size,
-            search: params.search ?? "",
-            unite: params.unite ?? "",
-        },
-    });
-
+export const getControles = async () => {
+    const res = await api.get<PageResponse<Controle>>("/controles")
     return res.data;
 };
 
