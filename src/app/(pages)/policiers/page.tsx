@@ -22,6 +22,7 @@ type Policier = {
     nom: string;
     postnom: string;
     prenom: string;
+    unite:string;
     sexe: string;
     telephone?: string;
     email?: string;
@@ -167,6 +168,7 @@ export default function PolicierPage() {
                                         <th>Nom</th>
                                         <th>Postnom</th>
                                         <th>Prénom</th>
+                                        <th>Unité</th>
                                         <th>Sexe</th>
                                         <th>Téléphone</th>
                                         <th>Email</th>
@@ -199,6 +201,7 @@ export default function PolicierPage() {
                                             <td>{p.nom}</td>
                                             <td>{p.postnom}</td>
                                             <td>{p.prenom}</td>
+                                            <td>{p.unite}</td>
                                             <td>{p.sexe}</td>
                                             <td>{p.telephone || "-"}</td>
                                             <td>{p.email || "-"}</td>
