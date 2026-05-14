@@ -87,6 +87,11 @@ export const createControle = async (data: Partial<Controle>) => {
     return res.data;
 };
 
+export const searchControleByMatricule = async (matricule: string) => {
+    const res = await api.get<Controle>(`/controles/matricule/${matricule}`);
+    return res.data;
+};
+
 /* ========================= UPDATE ========================= */
 
 export const updateControle = async (id: string, data: Partial<Controle>) => {

@@ -125,6 +125,7 @@ export default function ControlePage() {
     /* ========================= PDF PRINT ========================= */
 
     const handlePrintPDF = async (c: Controle) => {
+        if (!c) return;
 
         const doc = new jsPDF({
             orientation: "portrait",
@@ -140,59 +141,53 @@ export default function ControlePage() {
 
         doc.setFontSize(7);
         doc.setFont("helvetica", "normal");
-        doc.text("Police Nationale Congolaise", 37, 14, { align: "center" });
+        doc.text("Police Nationale Congolaise", 37, 15, { align: "center" });
 
-        doc.line(5, 16, 69, 16);
+        doc.line(5, 18, 69, 18);
 
-        doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        doc.text("IDENTITE", 5, 22);
+        doc.text("IDENTITE", 5, 25);
 
-        doc.setFont("helvetica", "normal");
-        doc.text(`Nom     : ${p?.nom ?? "-"}`, 5, 28);
-        doc.text(`Postnom : ${p?.postnom ?? "-"}`, 5, 33);
-        doc.text(`Prenom  : ${p?.prenom ?? "-"}`, 5, 38);
+        doc.setFontSize(7);
+        doc.text(`Nom: ${p?.nom ?? "-"}`, 5, 32);
+        doc.text(`Postnom: ${p?.postnom ?? "-"}`, 5, 37);
+        doc.text(`Matricule: ${c.matricule}`, 5, 45);
 
-        doc.setFont("helvetica", "bold");
-        doc.text("CONTROLE", 5, 47);
+        const qrString = buildQRData(c);
 
-        doc.setFont("helvetica", "normal");
-        doc.text(`Matricule : ${c.matricule}`, 5, 53);
-        doc.text(`Grade     : ${c.grade}`, 5, 58);
-        doc.text(`Unité     : ${c.unite}`, 5, 63);
-
-        // ✅ QR IDENTIQUE UI + PDF
         const qrData = await QRCode.toDataURL(buildQRData(c), {
             errorCorrectionLevel: "H",
             margin: 2,
-            width: 300,
+            width: 250,
         });
 
-        doc.addImage(qrData, "PNG", 48, 25, 22, 22);
+        doc.addImage(qrData, "PNG", 20, 50, 35, 35);
 
-        doc.setTextColor(c.present ? 0 : 180, c.present ? 120 : 0, 0);
+        doc.setTextColor(c.present ? 0 : 200, c.present ? 140 : 0, 0);
+        doc.text(c.present ? "PRESENT" : "ABSENT", 37, 95, { align: "center" });
 
-        doc.text(
-            c.present ? "PRESENT" : "ABSENT",
-            37,
-            75,
-            { align: "center" }
-        );
+        const blob = doc.output("blob");
+        const url = URL.createObjectURL(blob);
 
-        doc.setTextColor(0, 0, 0);
+        // 🔥 iframe print (PLUS STABLE QUE window.open)
+        const iframe = document.createElement("iframe");
+        iframe.style.position = "fixed";
+        iframe.style.right = "0";
+        iframe.style.bottom = "0";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "0";
 
-        const pdfBlobUrl = doc.output("bloburl");
+        iframe.src = url;
 
-        const printWindow = window.open(pdfBlobUrl);
+        document.body.appendChild(iframe);
 
-        if (printWindow) {
-            printWindow.onload = () => {
-                printWindow.focus();
-                printWindow.print();
-            };
-        } else {
-            toast.error("Impossible d'ouvrir la fenêtre d'impression");
-        }
+        iframe.onload = () => {
+            setTimeout(() => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+            }, 300);
+        };
     };
 
     /* ========================= UI ========================= */
@@ -285,6 +280,7 @@ export default function ControlePage() {
                                             colSpan={7}
                                             className="text-center py-10 text-gray-500"
                                         >
+
                                             Aucun contrôle trouvé
                                         </td>
                                     </tr>
@@ -305,8 +301,8 @@ export default function ControlePage() {
                                         <td>
                                             <span
                                                 className={`badge ${c.present
-                                                        ? "badge-success"
-                                                        : "badge-error"
+                                                    ? "badge-success"
+                                                    : "badge-error"
                                                     }`}
                                             >
                                                 {c.present ? "Oui" : "Non"}
@@ -316,8 +312,8 @@ export default function ControlePage() {
                                         <td>
                                             <span
                                                 className={`badge ${c.justifie
-                                                        ? "badge-info"
-                                                        : "badge-ghost"
+                                                    ? "badge-info"
+                                                    : "badge-ghost"
                                                     }`}
                                             >
                                                 {c.justifie ? "Oui" : "Non"}
@@ -377,8 +373,8 @@ export default function ControlePage() {
                                     <button
                                         key={p}
                                         className={`join-item btn ${page === p
-                                                ? "btn-primary"
-                                                : ""
+                                            ? "btn-primary"
+                                            : ""
                                             }`}
                                         onClick={() => setPage(p)}
                                     >

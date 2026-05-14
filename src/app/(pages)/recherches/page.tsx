@@ -13,6 +13,7 @@ import { getPolicierByMatricule } from "@/services/policier.service";
 import {
     Controle,
     searchControleByIdentite,
+    searchControleByMatricule,
 } from "@/services/controle.service";
 
 /* ========================= TYPES ========================= */
@@ -65,6 +66,20 @@ export default function RecherchePage() {
     const [identite, setIdentite] = useState<Policier | null>(null);
 
     /* ========================= RESET ========================= */
+
+    const buildQRData = (c: Controle) => {
+        const p = c.policier;
+
+        return JSON.stringify({
+            matricule: c.matricule,
+            nom: p?.nom || "",
+            postnom: p?.postnom || "",
+            prenom: p?.prenom || "",
+            grade: c.grade || "",
+            unite: c.unite || "",
+            present: c.present ?? false
+        });
+    };
 
     const resetAll = () => {
 
@@ -139,7 +154,7 @@ export default function RecherchePage() {
             );
 
             const res = await searchControleByIdentite({
-                nom: controleNom.trim() || undefined,
+                noms: controleNom.trim() || undefined,
                 postnom: controlePostnom.trim() || undefined,
                 prenom: controlePrenom.trim() || undefined,
                 dateNaissance: formattedDate,
@@ -172,43 +187,43 @@ export default function RecherchePage() {
     };
 
     /* ========================= SEARCH CONTROLE ========================= */
+    /* ========================= SEARCH CONTROLE ========================= */
+
     const handleSearchControle = async () => {
+
         if (!controleMatricule.trim()) {
+
             toast.warning("Entrez un matricule");
             return;
         }
 
         try {
+
             setControleLoading(true);
 
-            const res = await api.get("/controles", {
-                params: {
-                    matricule: controleMatricule.trim(), // ✅ IMPORTANT
-                    page: 0,
-                    size: 1,
-                },
-            });
+            const data = await searchControleByMatricule(
+                controleMatricule.trim()
+            );
 
-            // 🔥 support API PAGINÉE OU NON PAGINÉE
-            const data = res.data;
+            if (!data) {
 
-            const found = Array.isArray(data)
-                ? data[0]
-                : data.content?.[0] || data.data?.[0];
-
-            if (!found) {
                 toast.error("Contrôle introuvable");
                 setControle(null);
                 return;
             }
 
-            setControle(found);
+            setControle(data);
 
         } catch (error) {
+
             console.error(error);
-            toast.error("Erreur recherche contrôle");
+
             setControle(null);
+
+            toast.error("Erreur recherche contrôle");
+
         } finally {
+
             setControleLoading(false);
         }
     };
@@ -513,12 +528,8 @@ export default function RecherchePage() {
 
                                 <button
                                     className="btn btn-primary"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleSearchControle();
-                                    }}
-                                    disabled={
-                                        controleLoading
-                                    }
+                                    onClick={handleSearchControle}
+                                    disabled={controleLoading}
                                 >
                                     {controleLoading ? (
                                         <span className="loading loading-spinner loading-sm"></span>
@@ -587,12 +598,11 @@ export default function RecherchePage() {
                                             {controle.present ? (
 
                                                 <QRCodeCanvas
-                                                    value={JSON.stringify(
-                                                        controle
-                                                    )}
+                                                    value={buildQRData(controle)}
                                                     size={150}
+                                                    level="H"
+                                                    includeMargin={true}
                                                 />
-
                                             ) : (
 
                                                 <div className="flex items-center justify-center w-full h-full text-center text-sm font-semibold text-gray-500 border-2 border-dashed rounded-lg">
