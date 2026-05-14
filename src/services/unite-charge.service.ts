@@ -1,5 +1,19 @@
 import {api} from "@/lib/axios";
 
+export type LoginResponse = {
+    token: string;
+    username: string;
+    profile?: string;
+
+    userId: number;
+
+    uniteId: number;
+
+    missionId: number;
+
+    equipeId: number;
+};
+
 export const chargerUnite = async (data: {
     uniteId: number;
     missionId: number;

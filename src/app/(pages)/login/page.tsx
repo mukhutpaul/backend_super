@@ -5,6 +5,7 @@ import { Lock, Server, Wifi } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { syncPcData } from "@/services/pc-sync.service";
 
 
 import { loginRequest } from "@/services/auth.service";
@@ -12,6 +13,8 @@ import { loginRequest } from "@/services/auth.service";
 type LoginForm = {
     username: string;
     password: string;
+    profile?: string;
+    userId?: number;
 };
 
 export default function LoginPage() {
@@ -34,49 +37,198 @@ export default function LoginPage() {
      * LOGIN
      */
     const onSubmit = async (data: LoginForm) => {
+
         try {
+
             setLoading(true);
 
             toast.info(
-                `Connexion ${mode === "local" ? "locale" : "distante"} en cours...`
+                `Connexion ${mode === "local"
+                    ? "locale"
+                    : "distante"
+                } en cours...`
             );
 
-            localStorage.setItem("mode", mode);
+            // =========================
+            // SAVE MODE
+            // =========================
 
-            // 🔌 API CALL
-            const response = await loginRequest(data);
+            localStorage.setItem(
+                "mode",
+                mode
+            );
 
-            // 💾 TOKEN
-            localStorage.setItem("token", response.token);
+            // =========================
+            // LOGIN API
+            // =========================
 
-            // 💾 USERNAME
-            localStorage.setItem("username", response.username);
+            const response =
+                await loginRequest(data);
 
-            // 💾 PROFILE (SAFE)
-            localStorage.setItem("profile",String(response.profile ?? null))
-            ;
+            // =========================
+            // VALIDATION
+            // =========================
 
-            // 💾 USER COMPLET (SAFE)
+            if (!response?.token) {
+
+                throw new Error(
+                    "Token invalide"
+                );
+            }
+
+            // =========================
+            // TOKEN
+            // =========================
+
+            localStorage.setItem(
+                "token",
+                response.token
+            );
+
+            // =========================
+            // USERNAME
+            // =========================
+
+            localStorage.setItem(
+                "username",
+                response.username ?? ""
+            );
+
+            // =========================
+            // PROFILE
+            // =========================
+
+            localStorage.setItem(
+                "profile",
+                String(
+                    response.profile ?? null
+                )
+            );
+
+            // =========================
+            // USER
+            // =========================
+
             localStorage.setItem(
                 "user",
                 JSON.stringify({
                     ...response,
-                    profile: response.profile ?? null,
+                    profile:
+                        response.profile ?? null,
                 })
             );
 
-            toast.success("Connexion réussie");
+            // =========================
+            // REMOTE SYNC
+            // =========================
+
+            if (mode === "remote") {
+
+                try {
+
+                    if (!response.userId) {
+
+                        throw new Error(
+                            "Utilisateur invalide"
+                        );
+                    }
+
+                    const syncResponse =
+                        await syncPcData(
+                            response.userId
+                        );
+
+                    console.log(
+                        "SYNC RESPONSE",
+                        syncResponse
+                    );
+
+                    // =========================
+                    // SAVE SYNC DATA
+                    // =========================
+
+                    if (syncResponse?.data) {
+
+                        localStorage.setItem(
+                            "chefEquipe",
+                            JSON.stringify(
+                                syncResponse.data
+                                    .chefEquipe
+                            )
+                        );
+
+                        localStorage.setItem(
+                            "equipe",
+                            JSON.stringify(
+                                syncResponse.data
+                                    .equipe
+                            )
+                        );
+
+                        localStorage.setItem(
+                            "mission",
+                            JSON.stringify(
+                                syncResponse.data
+                                    .mission
+                            )
+                        );
+
+                        localStorage.setItem(
+                            "users",
+                            JSON.stringify(
+                                syncResponse.data
+                                    .users ?? []
+                            )
+                        );
+
+                        localStorage.setItem(
+                            "unites",
+                            JSON.stringify(
+                                syncResponse.data
+                                    .unites ?? []
+                            )
+                        );
+                    }
+
+                    toast.success(
+                        "Synchronisation réussie"
+                    );
+
+                } catch (syncError) {
+
+                    console.error(
+                        "Erreur sync",
+                        syncError
+                    );
+
+                    toast.warning(
+                        "Connexion OK mais synchronisation échouée"
+                    );
+                }
+            }
+
+            // =========================
+            // SUCCESS
+            // =========================
+
+            toast.success(
+                "Connexion réussie"
+            );
 
             router.push("/dashboard");
 
         } catch (error: any) {
+
             console.error(error);
 
             toast.error(
-                error.response?.data?.message || "Identifiants invalides"
+                error?.response?.data?.message ||
+                error?.message ||
+                "Identifiants invalides"
             );
 
         } finally {
+
             setLoading(false);
         }
     };
@@ -110,8 +262,8 @@ export default function LoginPage() {
                             disabled={loading}
                             onClick={() => setMode("local")}
                             className={`btn btn-sm flex-1 ${mode === "local"
-                                    ? "btn-primary"
-                                    : "btn-outline"
+                                ? "btn-primary"
+                                : "btn-outline"
                                 }`}
                         >
                             <Server size={16} />
@@ -124,8 +276,8 @@ export default function LoginPage() {
                             disabled={loading}
                             onClick={() => setMode("remote")}
                             className={`btn btn-sm flex-1 ${mode === "remote"
-                                    ? "btn-primary"
-                                    : "btn-outline"
+                                ? "btn-primary"
+                                : "btn-outline"
                                 }`}
                         >
                             <Wifi size={16} />

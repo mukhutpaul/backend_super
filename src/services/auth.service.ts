@@ -24,6 +24,7 @@ export type LoginResponse = {
   email?: string;
   noms?: string;
   profile?: string;
+  userId?: number;
 };
 
 export type User = {
