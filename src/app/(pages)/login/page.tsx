@@ -100,8 +100,14 @@ export default function LoginPage() {
 
                     toast.success("Synchronisation réussie");
 
-                } catch (syncError) {
+                } catch (syncError:any) {
 
+                    if(syncError.response?.status===401){
+
+                        toast.warning(
+                        "Identifiants invalides"
+                    );
+                    }
                     console.error("Erreur sync", syncError);
 
                     syncOk = false;
