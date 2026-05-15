@@ -13,8 +13,6 @@ import { loginRequest } from "@/services/auth.service";
 type LoginForm = {
     username: string;
     password: string;
-    profile?: string;
-    userId?: number;
 };
 
 export default function LoginPage() {
@@ -126,84 +124,48 @@ export default function LoginPage() {
 
                 try {
 
-                    if (!response.userId) {
-
-                        throw new Error(
-                            "Utilisateur invalide"
-                        );
-                    }
-
-                    const syncResponse =
-                        await syncPcData(
-                            response.userId
-                        );
-
-                    console.log(
-                        "SYNC RESPONSE",
-                        syncResponse
+                    const syncResponse = await syncPcData(
+                        data.username,
+                        data.password
                     );
 
-                    // =========================
-                    // SAVE SYNC DATA
-                    // =========================
+                    console.log("SYNC RESPONSE", syncResponse);
 
                     if (syncResponse?.data) {
 
                         localStorage.setItem(
                             "chefEquipe",
-                            JSON.stringify(
-                                syncResponse.data
-                                    .chefEquipe
-                            )
+                            JSON.stringify(syncResponse.data.chefEquipe)
                         );
 
                         localStorage.setItem(
                             "equipe",
-                            JSON.stringify(
-                                syncResponse.data
-                                    .equipe
-                            )
+                            JSON.stringify(syncResponse.data.equipe)
                         );
 
                         localStorage.setItem(
                             "mission",
-                            JSON.stringify(
-                                syncResponse.data
-                                    .mission
-                            )
+                            JSON.stringify(syncResponse.data.mission)
                         );
 
                         localStorage.setItem(
                             "users",
-                            JSON.stringify(
-                                syncResponse.data
-                                    .users ?? []
-                            )
+                            JSON.stringify(syncResponse.data.users ?? [])
                         );
 
                         localStorage.setItem(
                             "unites",
-                            JSON.stringify(
-                                syncResponse.data
-                                    .unites ?? []
-                            )
+                            JSON.stringify(syncResponse.data.unites ?? [])
                         );
                     }
 
-                    toast.success(
-                        "Synchronisation réussie"
-                    );
+                    toast.success("Synchronisation réussie");
 
                 } catch (syncError) {
 
-                    console.error(
-                        "Erreur sync",
-                        syncError
-                    );
+                    console.error("Erreur sync", syncError);
 
-                    toast.warning(
-                        "Connexion OK mais synchronisation échouée"
-                    );
+                    toast.warning("Connexion OK mais synchronisation échouée");
                 }
             }
 
