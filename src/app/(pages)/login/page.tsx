@@ -120,6 +120,8 @@ export default function LoginPage() {
             // REMOTE SYNC
             // =========================
 
+            let syncOk = true;
+
             if (mode === "remote") {
 
                 try {
@@ -164,6 +166,8 @@ export default function LoginPage() {
                 } catch (syncError) {
 
                     console.error("Erreur sync", syncError);
+
+                    syncOk = false;
 
                     toast.warning("Connexion OK mais synchronisation échouée");
                 }
