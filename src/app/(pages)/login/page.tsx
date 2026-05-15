@@ -6,8 +6,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { syncPcData } from "@/services/pc-sync.service";
-
-
 import { loginRequest } from "@/services/auth.service";
 
 type LoginForm = {
@@ -17,23 +15,12 @@ type LoginForm = {
 
 export default function LoginPage() {
 
-    const [mode, setMode] = useState<"local" | "remote">(
-        "local"
-    );
-
+    const [mode, setMode] = useState<"local" | "remote">("local");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
+    const { register, handleSubmit } = useForm<LoginForm>();
 
-    const {
-        register,
-        handleSubmit,
-    } = useForm<LoginForm>();
-
-
-    /**
-     * LOGIN
-     */
     const onSubmit = async (data: LoginForm) => {
 
         try {
@@ -41,85 +28,35 @@ export default function LoginPage() {
             setLoading(true);
 
             toast.info(
-                `Connexion ${mode === "local"
-                    ? "locale"
-                    : "distante"
-                } en cours...`
+                `Connexion ${mode === "local" ? "locale" : "distante"} en cours...`
             );
 
-            // =========================
-            // SAVE MODE
-            // =========================
-
-            localStorage.setItem(
-                "mode",
-                mode
-            );
+            localStorage.setItem("mode", mode);
 
             // =========================
-            // LOGIN API
+            // LOGIN
             // =========================
-
-            const response =
-                await loginRequest(data);
-
-            // =========================
-            // VALIDATION
-            // =========================
+            const response = await loginRequest(data);
 
             if (!response?.token) {
-
-                throw new Error(
-                    "Token invalide"
-                );
+                throw new Error("Token invalide");
             }
 
-            // =========================
-            // TOKEN
-            // =========================
-
-            localStorage.setItem(
-                "token",
-                response.token
-            );
-
-            // =========================
-            // USERNAME
-            // =========================
-
-            localStorage.setItem(
-                "username",
-                response.username ?? ""
-            );
-
-            // =========================
-            // PROFILE
-            // =========================
-
-            localStorage.setItem(
-                "profile",
-                String(
-                    response.profile ?? null
-                )
-            );
-
-            // =========================
-            // USER
-            // =========================
+            localStorage.setItem("token", response.token);
+            localStorage.setItem("username", response.username ?? "");
+            localStorage.setItem("profile", String(response.profile ?? null));
 
             localStorage.setItem(
                 "user",
                 JSON.stringify({
                     ...response,
-                    profile:
-                        response.profile ?? null,
+                    profile: response.profile ?? null,
                 })
             );
 
             // =========================
-            // REMOTE SYNC
+            // SYNC REMOTE
             // =========================
-
             let syncOk = true;
 
             if (mode === "remote") {
@@ -169,18 +106,21 @@ export default function LoginPage() {
 
                     syncOk = false;
 
-                    toast.warning("Connexion OK mais synchronisation échouée");
+                    toast.warning(
+                        "Connexion OK mais synchronisation échouée"
+                    );
                 }
             }
 
             // =========================
-            // SUCCESS
+            // REDIRECTION CONDITIONNELLE
             // =========================
 
-            toast.success(
-                "Connexion réussie"
-            );
+            if (mode === "remote" && !syncOk) {
+                return; // ❌ STOP ici, pas de dashboard
+            }
 
+            toast.success("Connexion réussie");
             router.push("/dashboard");
 
         } catch (error: any) {
@@ -194,7 +134,6 @@ export default function LoginPage() {
             );
 
         } finally {
-
             setLoading(false);
         }
     };
@@ -208,43 +147,32 @@ export default function LoginPage() {
 
                     {/* HEADER */}
                     <div className="text-center mb-6">
-
                         <h1 className="text-3xl font-bold text-primary">
                             ABA-CM PNC
                         </h1>
-
                         <p className="text-sm opacity-60 mt-1">
                             Authentification sécurisée
                         </p>
-
                     </div>
 
                     {/* MODE */}
                     <div className="flex gap-2 mb-5">
 
-                        {/* LOCAL */}
                         <button
                             type="button"
                             disabled={loading}
                             onClick={() => setMode("local")}
-                            className={`btn btn-sm flex-1 ${mode === "local"
-                                ? "btn-primary"
-                                : "btn-outline"
-                                }`}
+                            className={`btn btn-sm flex-1 ${mode === "local" ? "btn-primary" : "btn-outline"}`}
                         >
                             <Server size={16} />
                             Local
                         </button>
 
-                        {/* REMOTE */}
                         <button
                             type="button"
                             disabled={loading}
                             onClick={() => setMode("remote")}
-                            className={`btn btn-sm flex-1 ${mode === "remote"
-                                ? "btn-primary"
-                                : "btn-outline"
-                                }`}
+                            className={`btn btn-sm flex-1 ${mode === "remote" ? "btn-primary" : "btn-outline"}`}
                         >
                             <Wifi size={16} />
                             Distant
@@ -253,77 +181,49 @@ export default function LoginPage() {
                     </div>
 
                     {/* FORM */}
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="space-y-4"
-                    >
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                        {/* USERNAME */}
                         <div className="form-control">
-
                             <label className="label">
-                                <span className="label-text">
-                                    Nom d'utilisateur
-                                </span>
+                                <span className="label-text">Nom d'utilisateur</span>
                             </label>
 
                             <input
                                 type="text"
                                 disabled={loading}
-                                {...register("username", {
-                                    required: true,
-                                })}
+                                {...register("username", { required: true })}
                                 className="input input-bordered w-full"
                                 placeholder="Entrer votre identifiant"
                             />
-
                         </div>
 
-                        {/* PASSWORD */}
                         <div className="form-control">
-
                             <label className="label">
-                                <span className="label-text">
-                                    Mot de passe
-                                </span>
+                                <span className="label-text">Mot de passe</span>
                             </label>
 
                             <input
                                 type="password"
                                 disabled={loading}
-                                {...register("password", {
-                                    required: true,
-                                })}
+                                {...register("password", { required: true })}
                                 className="input input-bordered w-full"
                                 placeholder="••••••••"
                             />
-
                         </div>
 
-                        {/* MODE INFO */}
                         <div className="text-xs opacity-60 flex items-center gap-2 mt-2">
-
                             <Lock size={14} />
-
-                            <span>
-                                Mode actif :
-                            </span>
-
+                            <span>Mode actif :</span>
                             <span className="font-semibold">
-                                {mode === "local"
-                                    ? "Serveur local"
-                                    : "Serveur central"}
+                                {mode === "local" ? "Serveur local" : "Serveur central"}
                             </span>
-
                         </div>
 
-                        {/* SUBMIT */}
                         <button
                             type="submit"
                             disabled={loading}
                             className="btn btn-primary w-full mt-4"
                         >
-
                             {loading ? (
                                 <>
                                     <span className="loading loading-spinner loading-sm"></span>
@@ -332,7 +232,6 @@ export default function LoginPage() {
                             ) : (
                                 "Se connecter"
                             )}
-
                         </button>
 
                     </form>
