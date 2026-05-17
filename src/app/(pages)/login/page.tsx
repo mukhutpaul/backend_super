@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { syncPcData } from "@/services/pc-sync.service";
 import { loginRequest } from "@/services/auth.service";
+import { LOCAL_API, REMOTE_API } from "@/lib/axios";
 
 type LoginForm = {
     username: string;
@@ -22,9 +23,7 @@ export default function LoginPage() {
     const { register, handleSubmit } = useForm<LoginForm>();
 
     const onSubmit = async (data: LoginForm) => {
-
         try {
-
             setLoading(true);
 
             toast.info(
@@ -60,70 +59,86 @@ export default function LoginPage() {
             let syncOk = true;
 
             if (mode === "remote") {
-
                 try {
+
+                    // 🔥 IP / BASE URL (tu peux remplacer dynamiquement plus tard)
+                    const baseUrl = REMOTE_API;
 
                     const syncResponse = await syncPcData(
                         data.username,
-                        data.password
+                        data.password,
+                        baseUrl
                     );
 
                     console.log("SYNC RESPONSE", syncResponse);
 
-                    if (syncResponse?.data) {
+                    const payload = syncResponse?.data;
 
+                    if (payload) {
                         localStorage.setItem(
                             "chefEquipe",
-                            JSON.stringify(syncResponse.data.chefEquipe)
+                            JSON.stringify(payload.chefEquipe)
                         );
 
                         localStorage.setItem(
                             "equipe",
-                            JSON.stringify(syncResponse.data.equipe)
+                            JSON.stringify(payload.equipe)
                         );
 
                         localStorage.setItem(
                             "mission",
-                            JSON.stringify(syncResponse.data.mission)
+                            JSON.stringify(payload.mission)
                         );
 
                         localStorage.setItem(
                             "users",
-                            JSON.stringify(syncResponse.data.users ?? [])
+                            JSON.stringify(payload.users ?? [])
                         );
 
                         localStorage.setItem(
                             "unites",
-                            JSON.stringify(syncResponse.data.unites ?? [])
+                            JSON.stringify(payload.unites ?? [])
+                        );
+
+                        localStorage.setItem(
+                            "detailEquipes",
+                            JSON.stringify(payload.detailEquipes ?? [])
+                        );
+
+                        localStorage.setItem(
+                            "equipeUnites",
+                            JSON.stringify(payload.equipeUnites ?? [])
+                        );
+
+                        localStorage.setItem(
+                            "missionUnites",
+                            JSON.stringify(payload.missionUnites ?? [])
                         );
                     }
 
                     toast.success("Synchronisation réussie");
 
-                } catch (syncError:any) {
+                } catch (syncError: any) {
 
-                    if(syncError.response?.status===401){
-
-                        toast.warning(
-                        "Identifiants invalides"
-                    );
-                    }
                     console.error("Erreur sync", syncError);
 
                     syncOk = false;
 
-                    toast.warning(
-                        "Connexion OK mais synchronisation échouée"
-                    );
+                    if (syncError.response?.status === 401) {
+                        toast.warning("Identifiants invalides");
+                    } else {
+                        toast.warning(
+                            "Connexion OK mais synchronisation échouée"
+                        );
+                    }
                 }
             }
 
             // =========================
-            // REDIRECTION CONDITIONNELLE
+            // REDIRECTION
             // =========================
-
             if (mode === "remote" && !syncOk) {
-                return; // ❌ STOP ici, pas de dashboard
+                return;
             }
 
             toast.success("Connexion réussie");
