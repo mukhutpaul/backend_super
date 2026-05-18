@@ -1,19 +1,27 @@
 import { api } from "@/lib/axios";
 
-export const syncPcData = async (
-    username: string,
-    password: string,
-    baseUrl: string // 👈 IP envoyée depuis le frontend
-) => {
+interface LoginResponse {
+  token?: string;
+  user?: any;
+  message?: string;
+}
 
-    const response = await api.post(
-        `/pc/sync`,
-        {
-            username,
-            password,
-            baseUrl // 👈 IMPORTANT
-        }
+export const logindistant = async (
+  username: string,
+  password: string
+): Promise<LoginResponse> => {
+  try {
+    const { data } = await api.post<LoginResponse>(
+      "/auth/login-distant",
+      {
+        username,
+        password
+      }
     );
 
-    return response.data;
+    return data;
+  } catch (error: any) {
+    console.error("Login error:", error?.response?.data || error.message);
+    throw error;
+  }
 };

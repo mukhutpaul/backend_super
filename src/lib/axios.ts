@@ -5,7 +5,7 @@ import axios from "axios";
  * Tu peux changer dynamiquement selon login
  */
 const LOCAL_API = "http://localhost:8090/api";
-export const REMOTE_API = "http://10.26.176.185:8090/api"; // exemple production
+const REMOTE_API = "http://127.0.0.1:8090/api"; // exemple production
 
 // 👉 récupérer le mode choisi (local / remote)
 const getBaseURL = () => {
