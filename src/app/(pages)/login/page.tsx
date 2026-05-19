@@ -51,6 +51,8 @@ export default function LoginPage() {
 
                 localStorage.setItem("token", response.token);
                 localStorage.setItem("username", response.username ?? "");
+                localStorage.setItem("profile", response.profile ?? "");
+                localStorage.setItem("noms", response.noms ?? "");
 
                 toast.success("Connexion locale réussie");
                 router.push("/dashboard");
@@ -69,6 +71,10 @@ export default function LoginPage() {
 
                     console.log("REMOTE OK:", syncResponse);
 
+                    localStorage.setItem("username", syncResponse.username ?? "");
+                    localStorage.setItem("profile", syncResponse.profile ?? "");
+                    localStorage.setItem("noms", syncResponse.noms ?? "");
+
                     // =========================
                     // SWEETALERT SUCCESS
                     // =========================
@@ -81,7 +87,7 @@ export default function LoginPage() {
                     });
 
 
-                   // router.push("/dashboard");
+                    // router.push("/dashboard");
                     return;
 
                 } catch (remoteError: any) {
@@ -136,8 +142,8 @@ export default function LoginPage() {
                             disabled={loading}
                             onClick={() => setMode("local")}
                             className={`btn btn-sm flex-1 ${mode === "local"
-                                    ? "btn-primary"
-                                    : "btn-outline"
+                                ? "btn-primary"
+                                : "btn-outline"
                                 }`}
                         >
                             <Server size={16} />
@@ -149,8 +155,8 @@ export default function LoginPage() {
                             disabled={loading}
                             onClick={() => setMode("remote")}
                             className={`btn btn-sm flex-1 ${mode === "remote"
-                                    ? "btn-primary"
-                                    : "btn-outline"
+                                ? "btn-primary"
+                                : "btn-outline"
                                 }`}
                         >
                             <Wifi size={16} />
