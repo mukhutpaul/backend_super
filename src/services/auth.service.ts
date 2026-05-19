@@ -159,3 +159,8 @@ export const getUnitesByUser = async (userId: number) => {
 
   return res.data;
 };
+
+export const deleteDetailUnite = async (id: number) => {
+  const res = await api.delete(`/detail-unites/${id}`);
+  return res.data;
+};

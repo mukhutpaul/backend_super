@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Search } from "lucide-react";
+import { deleteDetailUnite } from "@/services/auth.service";
 
 
 
@@ -273,25 +274,22 @@ export default function UsersPage() {
      * 🔌 LOAD DATA
      */
     const fetchUsers = async () => {
-    try {
-        setLoading(true);
+        try {
+            setLoading(true);
 
-        const res = await getUsers();
+            const data = await getUsers();
 
-        const data = res?.data?.data || res?.data || res;
+            setUsers(Array.isArray(data) ? data : []);
+            setFiltered(Array.isArray(data) ? data : []);
 
-        const safeData = Array.isArray(data) ? data : [];
-
-        setUsers(safeData);
-        setFiltered(safeData);
-
-    } catch (error) {
-        console.error(error);
-    } finally {
-        setLoading(false);
-    }
-};
-
+        } catch (error) {
+            console.error(error);
+            setUsers([]);
+            setFiltered([]);
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleViewUser = async (user: User) => {
 
         setSelectedUser(user);
@@ -302,7 +300,15 @@ export default function UsersPage() {
 
             const data = await getUnitesByUser(user.id);
 
-            setUnitesUser(data);
+            console.log("UNITES USER =", data);
+
+            // ✅ FIX
+            setUnitesUser(
+                data?.data?.data ||
+                data?.data ||
+                data ||
+                []
+            );
 
         } catch (error) {
 
@@ -312,6 +318,40 @@ export default function UsersPage() {
         } finally {
 
             setLoadingUnites(false);
+        }
+    };
+
+    const handleRemoveUniteFromUser = async (id: number) => {
+        const confirm = await Swal.fire({
+            title: "Supprimer cette unité ?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Oui",
+            cancelButtonText: "Annuler",
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            await deleteDetailUnite(id);
+
+            toast.success("Unité supprimée");
+
+            // refresh propre
+            if (selectedUser?.id) {
+                const data = await getUnitesByUser(selectedUser.id);
+
+                setUnitesUser(
+                    data?.data?.data ||
+                    data?.data ||
+                    data ||
+                    []
+                );
+            }
+
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Erreur suppression unité");
         }
     };
     const handleDeleteUser = async (id: number) => {
@@ -875,6 +915,13 @@ export default function UsersPage() {
                                                     </div>
 
                                                 </div>
+                                                {/* DELETE BUTTON */}
+                                                <button
+                                                    className="btn btn-xs btn-error btn-outline"
+                                                    onClick={() => handleRemoveUniteFromUser(u.id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
 
                                                 <div className="badge badge-success badge-sm">
                                                     Active

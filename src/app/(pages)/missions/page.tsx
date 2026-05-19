@@ -23,7 +23,9 @@ import { getUsers } from "@/services/auth.service";
 type FormData = {
     zone: string;
     numero: string;
-    chargeMissionId: number;
+    chargeMission: {
+        id: number;
+    };
 };
 
 export default function MissionsPage() {
@@ -50,7 +52,9 @@ export default function MissionsPage() {
     const [form, setForm] = useState<FormData>({
         zone: "",
         numero: "",
-        chargeMissionId: 0,
+        chargeMission: {
+            id: 0,
+        },
     });
 
     const [page, setPage] = useState(1);
@@ -766,14 +770,16 @@ export default function MissionsPage() {
                                         }))
                                         .find(
                                             (opt: any) =>
-                                                opt.value === form.chargeMissionId
+                                                opt.value === form.chargeMission.id
                                         ) || null
                                 }
 
                                 onChange={(selected: any) =>
                                     setForm({
                                         ...form,
-                                        chargeMissionId: selected?.value || 0,
+                                        chargeMission: {
+                                            id: selected?.value || 0,
+                                        },
                                     })
                                 }
 
@@ -795,10 +801,10 @@ export default function MissionsPage() {
 
                                     option: ({ isFocused, isSelected }) =>
                                         `
-                                    px-4 py-2 cursor-pointer text-sm
-                                    ${isFocused ? "bg-base-200" : ""}
-                                    ${isSelected ? "bg-primary text-primary-content" : ""}
-                                `,
+            px-4 py-2 cursor-pointer text-sm
+            ${isFocused ? "bg-base-200" : ""}
+            ${isSelected ? "bg-primary text-primary-content" : ""}
+        `,
 
                                     singleValue: () =>
                                         "text-sm text-base-content",

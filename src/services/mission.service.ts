@@ -1,4 +1,4 @@
-import { api } from "@/lib/axios"
+import { api } from "@/lib/axios";
 
 /**
  * TYPES
@@ -10,6 +10,7 @@ export type Mission = {
     zone: string;
     numero: string;
     isActive: boolean;
+
     chargeMission?: {
         id: number;
         username?: string;
@@ -17,76 +18,115 @@ export type Mission = {
     };
 };
 
+/**
+ * CREATE PAYLOAD
+ */
 export type CreateMissionPayload = {
     zone: string;
     numero: string;
-    chargeMissionId: number;
-};
 
-export type UpdateMissionPayload = {
-    zone?: string;
-    numero?: string;
-    chargeMissionId?: number;
+    chargeMission: {
+        id: number;
+    };
 };
 
 /**
- * GET ALL
+ * UPDATE PAYLOAD
+ */
+export type UpdateMissionPayload = {
+    zone?: string;
+    numero?: string;
+
+    chargeMission?: {
+        id: number;
+    };
+};
+
+/**
+ * GET ALL MISSIONS
  */
 export const getMissions = async (): Promise<Mission[]> => {
     const res = await api.get("/missions");
     return res.data;
 };
 
-export const getUnitesByMission = async (missionId: number) => {
-
+/**
+ * GET UNITES BY MISSION
+ */
+export const getUnitesByMission = async (
+    missionId: number
+) => {
     const res = await api.get(
         `/mission-unites/${missionId}/unites`
     );
 
     return res.data;
 };
+
 /**
- * CREATE
+ * CREATE MISSION
  */
-export const createMission = async (data: CreateMissionPayload) => {
-    const res = await api.post("/missions", {
+export const createMission = async (
+    data: CreateMissionPayload
+) => {
+    const payload = {
         ...data,
         isActive: false,
         dateDebut: null,
         dateFin: null,
-    });
+    };
+
+    console.log("MISSION PAYLOAD:", payload);
+
+    const res = await api.post("/missions", payload);
 
     return res.data;
 };
 
 /**
- * UPDATE
+ * UPDATE MISSION
  */
-export const updateMission = async (id: number, data: UpdateMissionPayload) => {
-    const res = await api.put(`/missions/${id}`, data);
+export const updateMission = async (
+    id: number,
+    data: UpdateMissionPayload
+) => {
+    const res = await api.put(
+        `/missions/${id}`,
+        data
+    );
+
     return res.data;
 };
 
 /**
- * START
+ * START MISSION
  */
 export const startMission = async (id: number) => {
-    const res = await api.put(`/missions/${id}/start`);
+    const res = await api.put(
+        `/missions/${id}/start`
+    );
+
     return res.data;
 };
 
 /**
- * CLOSE
+ * CLOSE MISSION
  */
 export const closeMission = async (id: number) => {
-    const res = await api.put(`/missions/${id}/close`);
+    const res = await api.put(
+        `/missions/${id}/close`
+    );
+
     return res.data;
 };
 
 /**
- * DELETE
+ * DELETE MISSION
  */
 export const deleteMission = async (id: number) => {
-    const res = await api.delete(`/missions/${id}`);
+    const res = await api.delete(
+        `/missions/${id}`
+    );
+
     return res.data;
 };
